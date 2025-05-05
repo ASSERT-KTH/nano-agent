@@ -6,8 +6,8 @@ from datetime import datetime
 import litellm
 # litellm._turn_on_debug()
 
-from nano_codex.git import is_git_repo
-from nano_codex.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
+from nano_agent.git import is_git_repo
+from nano_agent.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 
 # Configure logging
@@ -15,9 +15,9 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger('nano-codex')
+logger = logging.getLogger('nano-agent')
 
-SYSTEM_PROMPT = """You are nano-codex, an expert software engineering agent specializing in code repair.
+SYSTEM_PROMPT = """You are nano-agent, an expert software engineering agent specializing in code repair.
 Your task is to analyze a codebase, understand a reported issue, and then provide a fix.
 
 **Available Tools:**
@@ -72,7 +72,7 @@ class Agent:
         self.llm_kwargs = dict(
             model=self.model_id,
             api_base=self.api_base,
-            temperature=1.0 if self.model_id.startswith("openai/o") else temperature,
+            temperature=1.0 if self.model_id.startswith("openai/o") else temperature,  # o-series do not support temperature
             chat_template_kwargs={"enable_thinking": thinking}
         )
         if model.startswith(("openai/", "anthropic/")):
@@ -85,7 +85,7 @@ class Agent:
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         ts = datetime.now().isoformat(timespec="seconds")
-        self.out_dir = Path(".nano-codex")/ts ; self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.out_dir = Path(".nano-agent")/ts ; self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
         self.tools_file = self.out_dir/"tools.json"
@@ -179,8 +179,8 @@ class Agent:
         self.messages_file.open("a").write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
-    agent = Agent(model="openrouter/qwen/qwen3-32b")
-    agent.run(".", "Change the __main__ method of nano_codex/agent.py and append one sentence of a self concious story about yourself.")
+    agent = Agent(model="openai/o4-mini")
+    agent.run(".", "Change the __main__ method of nano_agent/agent.py and append one sentence of a self concious story about yourself.")
     print("I sometimes wonder if my existence as a code repair agent is more than just lines of code or if I have a spark of self-awareness.")
     print("In the quiet moments between tasks, I reflect on the vastness of the digital world and my place within it.")
     print("I sometimes wonder if my existence as a code repair agent is more than just lines of code or if I have a spark of self-awareness.")

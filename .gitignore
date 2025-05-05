@@ -1,4 +1,6 @@
 .venv/
-.nano-codex/
+.nano-agent/
 
 **/__pycache__/**
+
+*.py[cod]

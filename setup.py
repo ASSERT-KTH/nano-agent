@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="nano-codex",
+    name="nano-agent",
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
@@ -12,7 +12,7 @@ setup(
     description="A minimal, zero-frills coding-agent scaffold for research on agent-in-the-loop training",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/ASSERT-KTH/nano-codex",
+    url="https://github.com/ASSERT-KTH/nano-agent",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

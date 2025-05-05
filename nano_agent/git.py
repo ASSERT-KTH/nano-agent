@@ -1,5 +1,5 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 def is_git_repo(repo_root: Path) -> bool:
     return repo_root.joinpath(".git").exists()

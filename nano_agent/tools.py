@@ -2,9 +2,9 @@ import logging
 import subprocess
 from pathlib import Path
 
-from nano_codex.git import git_diff
+from nano_agent.git import git_diff
 
-logger = logging.getLogger('nano-codex')
+logger = logging.getLogger('nano-agent')
 
 SHELL_TOOL = {
     "type": "function",
@@ -90,7 +90,6 @@ def apply_patch(repo_root: Path, patch: dict) -> tuple[bool, str]:
     Apply a literal search/replace to one file.
     Returns (True, diff) if the patch was applied, (False, error) otherwise.
     """
-    logger.info(f"Attempting to apply patch to file: {patch['file']}")
     try:
         target = repo_root / patch["file"]
 

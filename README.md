@@ -1,4 +1,4 @@
-# nano‑codex
+# nano‑agent
 
 *A minimal, no‑magic coding‑agent scaffold for:*
 
@@ -10,7 +10,7 @@
 
 ## What it is
 
-`nano‑codex` is a zero‑bloat wrapper that turns any OpenAI‑style LLM into a coding agent with two tools:
+`nano‑agent` is a zero‑bloat wrapper that turns any OpenAI‑style LLM into a coding agent with two tools:
 
 ```
 
@@ -34,9 +34,9 @@ navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
 These make agents more *capable*, but also more *opaque*.  
 They're hard to analyze, and thus hard to adopt to generate rollout training data.
 
-`nano‑codex` takes the opposite stance:  
+`nano‑agent` takes the opposite stance:  
 Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies** — even if they start out worse.  
-That’s what `nano‑codex` tries to provide.
+That's what `nano‑agent` tries to provide.
 
 ---
 
@@ -45,7 +45,7 @@ That’s what `nano‑codex` tries to provide.
 ```python
 import tempfile
 from datasets import load_dataset
-from nano_codex import Agent
+from nano_agent import Agent
 from git import Repo
 
 run = load_dataset("SWE-Gym/SWE-Gym", split="train[:1]")[0]
@@ -59,14 +59,14 @@ agent = Agent(
     thinking=True  # enables <think> ... </think> reasoning blocks
 )
 agent.run(run["problem_statement"], repo_root=tempdir)
-print(agent.messages, agent.tools)  # or access in `.nano-codex/<timestamp>/
+print(agent.messages, agent.tools)  # or access in `.nano-agent/<timestamp>/
 ```
 
 ---
 
 ## Use with HuggingFace TRL
 
-Because `nano‑codex` exposes the agent via a single `.run()` call and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
+Because `nano‑agent` exposes the agent via a single `.run()` call and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
 
 > **Note:** "cleanly" refers to modifications made in our [TRL fork](https://github.com/ASSERT-KTH/trl) to enable direct agent integration. These changes support the [CodeRepairRL](https://github.com/ASSERT-KTH/CodeRepairRL) project but may not be merged into the main HuggingFace repository.
 
@@ -74,7 +74,7 @@ To use it:
 
 * Write a rollout client that wraps `Agent.run()`
 * Extract the diff and messages for each training example
-* Feed those into TRL’s reward modeling or fine-tuning pipelines
+* Feed those into TRL's reward modeling or fine-tuning pipelines
 
 This lets you train models that learn to use tools directly, grounded in interaction data — no custom env needed.
 
@@ -83,7 +83,7 @@ This lets you train models that learn to use tools directly, grounded in interac
 ## Install
 
 ```bash
-pip install nano-codex  # TODO: publish
+pip install nano-agent  # TODO: publish
 ```
 
 ---
@@ -95,10 +95,10 @@ It's not the strongest agent — but it's ideal as a training foundation.
 ## Citation
 
 ```
-@misc{nano-codex2025,
+@misc{nano-agent2025,
   author       = {Bjarni Haukur},
-  title        = {nano-codex: a minimalist scaffold for agent-in-the-loop training},
-  howpublished = {\url{https://github.com/BjarniHaukur/nano-codex}},
+  title        = {nano-agent: a minimalist scaffold for agent-in-the-loop training},
+  howpublished = {\url{https://github.com/BjarniHaukur/nano-agent}},
   year         = {2025}
 }
 ```
