@@ -69,31 +69,29 @@ def shell(cmd: str, cwd: Path, repo_root: Path, timeout: int = 4, truncate: int 
     return out[:truncate], new_cwd
 
 
-def apply_patch(repo_root: Path, patch: dict) -> str:
+def apply_patch(search: str, replace: str, file: str, repo_root: Path) -> str:
     """
     Apply a literal search/replace to one file.
     Returns (True, diff) if the patch was applied, (False, error) otherwise.
     """
     try:
-        target = repo_root / patch["file"]
+        target = repo_root / file
 
-        if not (target := repo_root / patch["file"]).exists():
-            return False, f"[file {target} not found]"
+        if not target.exists():
+            return f"[file {target} not found]"
         
         text = target.read_text()
+        search_count = text.count(search)
 
-        if text.count(patch["search"]) == 0:
-            return False, "[search string not found]"
+        if search_count == 0:
+            return "[search string not found]"
         
-        if (cnt := text.count(patch["search"])) > 1:
-            return False, f"[ambiguous search string: {cnt} occurrences]"
+        if search_count > 1:
+            return f"[ambiguous search string: {search_count} occurrences]"
         
-        new_text = text.replace(patch["search"], patch["replace"], 1)
-
+        new_text = text.replace(search, replace, 1)
         target.write_text(new_text)
-
         return "[patch applied successfully]"
-        
 
     except Exception as e:
         return f"[failed to apply patch: {e}]"
@@ -108,5 +106,6 @@ def create(path: str, content: str) -> str:
         path.touch()
         path.write_text(content)
         return f"[created {path}]"
+    
     except Exception as e:
         return f"[failed to create {path}: {e}]"
