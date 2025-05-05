@@ -1,87 +1,104 @@
 # nano‑codex
 
-*A minimal, zero‑frills coding‑agent scaffold for research on **agent‑in‑the‑loop training**.*
+*A minimal, no‑magic coding‑agent scaffold for:*
+
+1. agent‑in‑the‑loop reinforcement learning  
+2. understanding coding agents in clear, minimal terms  
+3. running neat little code fixes with modern LLMs
 
 ---
 
 ## What it is
 
-`nano‑codex` is the smallest possible wrapper that turns any OpenAI‑compatible LLM into a **read‑only repo explorer + literal search/replace patcher**:
+`nano‑codex` is a zero‑bloat wrapper that turns any OpenAI‑style LLM into a coding agent with two tools:
 
 ```
-shell(cmd)  # ls, cat, grep …  (all executed within rbash so you can rest assured nothing bad happens)
-apply_patch({"search": ..., "replace": ..., "file": ...}) 
-```
 
-That's it.  
-No prompt pruning, no regex, no fuzzy diffs, no hidden heuristics.
+shell(cmd)  # ls, cat, grep … (stateful, runs in rbash)
+apply_patch({...})  # search/replace on one file
+
+````
+
+Nothing else.
+
+No internal state modeling, no fuzzy patching, no hidden prompts or repo graphs.  
+You get the raw reasoning, tool calls, and results — exactly what the model saw and did.
 
 ---
 
 ## Why it exists
 
-Most code‑repair agents (Aider, SWE‑Agent, OpenHands) are feature‑rich but **opaque**:  
-extra prompts, repo maps, internal heuristics.  
-That's great for deployment, when the agent needs to work in one shot, but if we would rather rather train a model to operate in the terminal than be conducive for the specifics of those agents... 
+Most coding agents (e.g. Aider, SWE-Agent, Devin) are designed to perform well. To achieve that, they bake in layers of human-designed heuristics:  
+navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
 
-`nano‑codex` gives you a **clean RL environment** for e.g. [SWE-Gym](https://github.com/SWE-Gym/SWE-Gym):
+These make agents more *capable*, but also more *opaque*.  
+They're hard to analyze, and thus hard to adopt to generate rollout training data.
 
-* **No ad‑hoc state surgery** – every tool call & reply is logged verbatim.
-* **One‑shot replay** – `messages.jsonl` concatenates straight into `AutoTokenizer.apply_chat_template()`.
-
-This repo underpins agent baselines for research in **"Agent‑in‑the‑Loop Reinforcement Learning for Code Repair"**.
+`nano‑codex` takes the opposite stance:  
+Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies** — even if they start out worse.  
+That’s what `nano‑codex` tries to provide.
 
 ---
 
-## Quick start
-
-```bash
-pip install nano-codex
-```
+## Example: minimal SWE‑Gym rollout
 
 ```python
 import tempfile
-from git import Repo
-
-from nano_codex import Agent
 from datasets import load_dataset
+from nano_codex import Agent
+from git import Repo
 
 run = load_dataset("SWE-Gym/SWE-Gym", split="train[:1]")[0]
 
-# Create a temporary directory and clone the repo
 tempdir = tempfile.mkdtemp()
 Repo.clone_from(f"https://github.com/{run['repo']}.git", tempdir)
 
 agent = Agent(
     model="hosted_vllm/qwen3-8b",
     api_base="http://localhost:8000/v1",
-    thinking=True                            # enable <think> … </think> before tool calling
+    thinking=True  # enables <think> ... </think> reasoning blocks
 )
-
 agent.run(run["problem_statement"], repo_root=tempdir)
 print(agent.messages, agent.tools)  # or access in `.nano-codex/<timestamp>/
 ```
-# → ready for replay / RL reward!
-
-Outputs:
-
-* `.nano-codex/<timestamp>/messages.jsonl` – raw messages
-* `.nano-codex/<timestamp>/tools.json` – the tools used, pass this to your AutoTokenizer in downstream tasks
-* `.nano-codex/<timestamp>/metadata.json`    – model id, tool‑call count, etc.
 
 ---
 
+## Use with HuggingFace TRL
+
+Because `nano‑codex` exposes the agent via a single `.run()` call and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
+
+> **Note:** "cleanly" refers to modifications made in our [TRL fork](https://github.com/ASSERT-KTH/trl) to enable direct agent integration. These changes support the [CodeRepairRL](https://github.com/ASSERT-KTH/CodeRepairRL) project but may not be merged into the main HuggingFace repository.
+
+To use it:
+
+* Write a rollout client that wraps `Agent.run()`
+* Extract the diff and messages for each training example
+* Feed those into TRL’s reward modeling or fine-tuning pipelines
+
+This lets you train models that learn to use tools directly, grounded in interaction data — no custom env needed.
+
+---
+
+## Install
+
+```bash
+pip install nano-codex  # TODO: publish
+```
+
+---
+
+It's not the strongest agent — but it's ideal as a training foundation.
+
+---
 
 ## Citation
-
-If `nano‑codex` helps your research, please cite or star the repo.
 
 ```
 @misc{nano-codex2025,
   author       = {Bjarni Haukur},
   title        = {nano-codex: a minimalist scaffold for agent-in-the-loop training},
-  howpublished = {\url{https://github.com/ASSERT-KTH/nano-codex}},
+  howpublished = {\url{https://github.com/BjarniHaukur/nano-codex}},
   year         = {2025}
 }
 ```
-

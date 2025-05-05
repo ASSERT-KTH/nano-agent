@@ -9,10 +9,10 @@ setup(
     ],
     author="Bjarni Haukur",
     author_email="bjarnihaukur11@gmail.com",
-    description="A Python package for the Nano Codex project",
+    description="A minimal, zero-frills coding-agent scaffold for research on agent-in-the-loop training",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/ASSERT-KTH/nano-codex",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
