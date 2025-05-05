@@ -52,6 +52,7 @@ CREATE_TOOL = {
 }
 def shell(cmd: str, cwd: Path, repo_root: Path, remaining_tool_calls: int, timeout: int = 4, truncate: int = 1_024) -> str:
     """Run a shell command safely using rbash with timeout and output limits."""
+    new_cwd = cwd
     try:
         out = subprocess.check_output(
             ["bash", "-rc", cmd], cwd=cwd,  # runs in readonly mode
@@ -66,6 +67,7 @@ def shell(cmd: str, cwd: Path, repo_root: Path, remaining_tool_calls: int, timeo
         out = f"[command failed: {e}]"
 
     if not str(new_cwd).startswith(str(repo_root)):
+        print(new_cwd, repo_root)
         new_cwd = cwd
         out = f"[cannot cd out of repo]"
 

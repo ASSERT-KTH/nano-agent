@@ -3,9 +3,10 @@ from pathlib import Path
 from datetime import datetime
 
 import litellm
+# litellm._turn_on_debug()
 
 from nano_codex.git import is_git_repo
-from tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
+from nano_codex.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 
 SYSTEM_PROMPT = """You are nano-codex, an expert software engineering agent specializing in code repair.
@@ -57,17 +58,17 @@ class Agent:
         self.model_id = model
         self.api_base = api_base
         self.thinking = thinking
-
+        self.temperature = temperature
         self.tools = [SHELL_TOOL, PATCH_TOOL]
         
         self.llm_kwargs = dict(
             model=self.model_id,
             api_base=self.api_base,
-            temperature=temperature,
+            temperature=1.0 if self.model_id.startswith("openai/o") else temperature,
             chat_template_kwargs={"enable_thinking": thinking}
         )
-
-        self._reset()
+        if model.startswith(("openai/", "anthropic/")):
+            self.llm_kwargs.pop("chat_template_kwargs")  # not supported by these providers
 
     def _reset(self):
         self.remaining = self.MAX_TOOL_CALLS
@@ -78,14 +79,18 @@ class Agent:
 
         self.messages_file = self.out_dir/"messages.jsonl"
         self.tools_file = self.out_dir/"tools.json"
+        self.metadata_file = self.out_dir/"metadata.json"
         self.messages_file.touch()
         self.tools_file.touch()
+        self.metadata_file.touch()
 
         self.messages_file.open("a").write(json.dumps(self.messages[0], ensure_ascii=False) + "\n")
         self.tools_file.open("a").write(json.dumps(self.tools, ensure_ascii=False, indent=4))
+        self.metadata_file.open("a").write(json.dumps({"model": self.model_id, "api_base": self.api_base, "temperature": self.temperature}, ensure_ascii=False, indent=4))
 
     def run(self, repo_root: str|Path, task: str):
-        cwd = repo_root = Path(repo_root)
+        self._reset()
+        cwd = repo_root = Path(repo_root).absolute()
 
         assert cwd.exists(), "Repository not found"
         assert is_git_repo(cwd), "Must be run inside a git repository"
@@ -116,7 +121,7 @@ class Agent:
             elif name == "apply_patch":
                 unified_diff = apply_patch(
                     repo_root,
-                    args["patches"],
+                    args["patch"],
                 )
                 return unified_diff
             else:
@@ -125,10 +130,8 @@ class Agent:
             self._tool_reply(call, output)
             self.remaining -= 1
 
-        self._reset()
-
     def _chat(self) -> dict:
-        reply = litellm.completions(
+        reply = litellm.completion(
             **self.llm_kwargs,
             messages=self.messages,
             tools=self.tools,
@@ -136,23 +139,18 @@ class Agent:
             max_tokens=4096
         )
 
-        msg = reply["choices"][0]["message"]
+        msg = reply["choices"][0]["message"].model_dump()
 
         if self.thinking and (reasoning := msg.pop("reasoning_content", None)):
             self._append({
                 "role": "assistant",
                 "content": reasoning,
-                "name": "reasoning"          # optional tag; ignored by templates
+                "name": "reasoning"
             })
-
 
         self._append(msg)
 
         return msg
-
-    def _log(self, obj: dict):
-        self.messages_file.open("a").write(
-            json.dumps(obj, ensure_ascii=False) + "\n")
 
     def _append(self, msg: dict):
         self.messages.append(msg)
@@ -164,3 +162,11 @@ class Agent:
             "content": output,
             "tool_call_id": call["id"]
         })
+
+    def _log(self, obj: dict):
+        self.messages_file.open("a").write(
+            json.dumps(obj, ensure_ascii=False) + "\n")
+
+if __name__ == "__main__":
+    agent = Agent(model="openai/gpt-4.1-mini")
+    agent.run(".", "Change the __main__ method of nano_codex/agent.py and append something self conscious")
