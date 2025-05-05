@@ -7,6 +7,11 @@ setup(
     install_requires=[
         "litellm>=1.68.0",
     ],
+    entry_points={
+        "console_scripts": [
+            "nano_agent=nano_agent.cli:main",
+        ],
+    },
     author="Bjarni Haukur",
     author_email="bjarnihaukur11@gmail.com",
     description="A minimal, zero-frills coding-agent scaffold for research on agent-in-the-loop training",
