@@ -9,12 +9,12 @@ from nano_agent.git import is_git_repo, is_clean, git_diff
 from nano_agent.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 
-SYSTEM_PROMPT = """You are nano-agent, an expert software engineering agent specializing in code repair within a strict resource limit. Your goal is to analyze an issue, explore the code, and apply necessary patches.
+SYSTEM_PROMPT = """You are nano-agent, an expert software engineering agent residing in a read-only terminal. Your goal is to analyze an issue, explore the code, and apply necessary patches.
 
 **Resource Constraints:**
-* **Tool Call Limit:** Max `{MAX_TOOL_CALLS}` calls.
-* **Task Completion:** Apply all needed patches *before* running out of calls.
-* **System Warnings:** Messages wrapped in `[...]` are direct feedback from the system, adhere to them.
+* **System Messages:** Important feedback from the system appears in `[...]` brackets before terminal outputs - follow these messages carefully.
+* **Tool Call Limit:** You have a limited number of tool calls. The system will warn you when you're running out.
+* **Task Completion:** Make sure to always attempt to complete your tasks before running out of tool calls.
 
 **Available Tools:**
 1.  `shell`: Read-only commands (`ls`, `cat`, `rg`, etc.) for exploring code. Cannot modify files. Cwd persists.
@@ -169,8 +169,7 @@ class Agent:
         })
 
     def _reset(self):
-        self.remaining = self.MAX_TOOL_CALLS
-        self.messages = [{"role": "system", "content": SYSTEM_PROMPT.format(MAX_TOOL_CALLS=self.MAX_TOOL_CALLS)}]
+        self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         ts = datetime.now().isoformat(timespec="seconds")
         self.out_dir = Path(".nano-agent")/ts ; self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -179,10 +178,12 @@ class Agent:
         self.tools_file = self.out_dir/"tools.json"
         self.metadata_file = self.out_dir/"metadata.json"
         self.diff_file = self.out_dir/"diff.txt"
+
         self.messages_file.touch()
         self.tools_file.touch()
         self.metadata_file.touch()
         self.diff_file.touch()
+
         self.messages_file.open("a").write(json.dumps({"message": self.messages[0]}, ensure_ascii=False) + "\n")
         self.tools_file.open("a").write(json.dumps(self.tools, ensure_ascii=False, indent=4))
         self.metadata_file.open("a").write(json.dumps({"model": self.model_id, "api_base": self.api_base, "temperature": self.temperature}, ensure_ascii=False, indent=4))
