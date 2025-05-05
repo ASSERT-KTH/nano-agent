@@ -17,7 +17,9 @@
 shell(cmd)  # ls, cat, grep … (stateful, runs in rbash)
 apply_patch({...})  # search/replace on one file
 
-````
+```
+
+> **Note:** The agent runs commands in `rbash` (restricted bash), which helps provide a safer execution environment by limiting access to certain operations.
 
 Nothing else.
 
@@ -38,15 +40,46 @@ They're hard to analyze, and thus hard to adopt to generate rollout training dat
 Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies** — even if they start out worse.  
 That's what `nano‑agent` tries to provide.
 
+
 ---
+
+## Install
+
+```bash
+git clone git@github.com:ASSERT-KTH/nano-agent.git && cd nano-agent && pip install -e .
+# or
+pip install nano-agent  # TODO: publish
+```
+
+Then you just need an API key for your chosen provider or host them yourself with [vLLM](https://docs.vllm.ai/en/latest/). See [litellm](https://docs.litellm.ai/docs/) documentation for more details.
+
+---
+
+## Example: rollout to Tensor
+
+```python
+from transformers import AutoTokenizer
+from nano_agent import Agent
+
+agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=True)
+agent.run(".", "There is a bug in this repo...")
+
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
+tokens = tokenizer.apply_chat_template(
+  agent.messages,
+  tools=agent.tools,
+  tokenize=True,
+  return_format="pt"
+)
+```
 
 ## Example: minimal SWE‑Gym rollout
 
 ```python
 import tempfile
-from datasets import load_dataset
+from git import Repo  # git-python
 from nano_agent import Agent
-from git import Repo
+from datasets import load_dataset
 
 run = load_dataset("SWE-Gym/SWE-Gym", split="train[:1]")[0]
 
@@ -54,11 +87,12 @@ tempdir = tempfile.mkdtemp()
 Repo.clone_from(f"https://github.com/{run['repo']}.git", tempdir)
 
 agent = Agent(
-    model="hosted_vllm/qwen3-8b",
+    model="hosted_vllm/qwen3-8b",  # in GRPO RL settings, rollouts are generated on-policy
     api_base="http://localhost:8000/v1",
     thinking=True  # enables <think> ... </think> reasoning blocks
 )
-agent.run(run["problem_statement"], repo_root=tempdir)
+diff = agent.run(run["problem_statement"], repo_root=tempdir)
+print(diff)  # the unified diff produced by the agent
 print(agent.messages, agent.tools)  # or access in `.nano-agent/<timestamp>/
 ```
 
@@ -66,7 +100,7 @@ print(agent.messages, agent.tools)  # or access in `.nano-agent/<timestamp>/
 
 ## Use with HuggingFace TRL
 
-Because `nano‑agent` exposes the agent via a single `.run()` call and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
+Because `nano‑agent` can communicate with any OpenAI compatible endpoint and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
 
 > **Note:** "cleanly" refers to modifications made in our [TRL fork](https://github.com/ASSERT-KTH/trl) to enable direct agent integration. These changes support the [CodeRepairRL](https://github.com/ASSERT-KTH/CodeRepairRL) project but may not be merged into the main HuggingFace repository.
 
@@ -77,18 +111,6 @@ To use it:
 * Feed those into TRL's reward modeling or fine-tuning pipelines
 
 This lets you train models that learn to use tools directly, grounded in interaction data — no custom env needed.
-
----
-
-## Install
-
-```bash
-pip install nano-agent  # TODO: publish
-```
-
----
-
-It's not the strongest agent — but it's ideal as a training foundation.
 
 ---
 

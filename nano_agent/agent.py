@@ -1,59 +1,57 @@
 import json
-import logging
 from pathlib import Path
 from datetime import datetime
 
 import litellm
 # litellm._turn_on_debug()
 
-from nano_agent.git import is_git_repo
+from nano_agent.git import is_git_repo, is_clean, git_diff
 from nano_agent.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('nano-agent')
-
 SYSTEM_PROMPT = """You are nano-agent, an expert software engineering agent specializing in code repair.
-Your task is to analyze a codebase, understand a reported issue, and then provide a fix.
+Your primary goal is to analyze a codebase, understand a reported issue, and provide a working fix in the form of one or more patches, all within a strict resource limit.
+
+**Resource Constraints:**
+* **Tool Call Limit:** You have a maximum of `{MAX_TOOL_CALLS}` tool calls available for each task. Each use of `apply_patch` counts as one call.
+* **Task Completion:** You *must* successfully apply all necessary patches to fix the issue *before* you run out of tool calls. Failure to do so means the task is incomplete.
+* **System Warnings:** Pay close attention to tool responses. Messages starting with `[SYSTEM WARNING: ...]` will alert you when you are nearing the tool call limit (e.g., `[SYSTEM WARNING: Only 5 tool calls remaining. Apply your patch soon]`). Plan accordingly.
 
 **Available Tools:**
-
-1. shell: A read-only shell environment to:
-   - Navigate the repository (ls, pwd)
-   - Explore file structure (find . -type f)
-   - Examine file contents (cat, head, tail)
-   - Search for code patterns (ripgrep/rg)
-   - Understand the code context surrounding the issue
-
-2. apply_patch: Use this when you have a solution.
-   - Takes an array of patches, each containing:
-     - search: The exact string to find (must appear exactly once in file)
-     - replace: The string to replace it with
-     - file: Path to the file to modify
-   - Changes are applied as search/replace operations
-   - Returns a git diff showing applied changes
+1.  `shell`: Execute read-only commands in a restricted shell environment to:
+    * Navigate the repository (`ls`, `pwd`).
+    * Explore the file structure (`find . -type f`).
+    * Examine file contents (`cat`, `head`, `tail`).
+    * Search for code patterns (`ripgrep`/`rg`).
+    * Understand the code context surrounding the issue.
+    * **Note:** This tool cannot modify files. The working directory state persists between `shell` calls.
+2.  `apply_patch`: Apply a single, precise SEARCH/REPLACE modification to a file.
+    * Takes parameters:
+        * `search`: The *exact* string to find. This string must appear only *once* in the target file.
+        * `replace`: The string to replace the `search` string with.
+        * `file`: The relative path to the file to modify from the repository root.
+    * Returns a confirmation message or an error. **Use this tool carefully and precisely.**
 
 **Workflow:**
+1.  **Understand the Problem:** Carefully analyze the user-provided issue description.
+2.  **Explore Efficiently:** Use the `shell` tool strategically to locate relevant files and understand the code. **Conserve your tool calls.**
+3.  **Identify the Fix:** Determine the *precise* code changes needed. Plan the sequence of patches if multiple modifications are required.
+4.  **Submit Patch(es):** Use the `apply_patch` tool for *each* required modification. Ensure you have enough calls remaining to apply all necessary patches.
 
-1. Understand the Problem: Read the user-provided issue description carefully
-2. Explore the Codebase: Use shell methodically to locate relevant files and understand the code
-3. Identify the Fix: Determine the precise changes needed
-4. Submit Patches: Call apply_patch with your search/replace patches to implement the fix
-
-**Important Notes:**
-- The shell tool is read-only and cannot modify files
-- All changes must be submitted via the apply_patch tool
-- Each search string must appear exactly once in the target file
-- Be extremely careful with whitespace and indentation in your search/replace strings
-- Plan your exploration efficiently as you have limited tool calls
+**Important Guidelines:**
+* **System & Tool Messages:** Messages enclosed in square brackets `[...]` (e.g., `[command output]`, `[SYSTEM WARNING: ...]`, `[patch applied successfully]`, `[search string not found]`) represent feedback directly from the system or the executed tools. Interpret them carefully.
+* **Read-Only Exploration:** All exploration and analysis must be done using the `shell` tool.
+* **Modification via Patch:** File modifications *only* occur through the `apply_patch` tool.
+* **Patch Granularity:** Keep patches **small and localized**. The `apply_patch` tool works best for targeted fixes.
+* **Handling Larger Changes:** If a fix requires modifications in multiple non-contiguous locations or involves significant restructuring, **break it down into a sequence of multiple, smaller `apply_patch` calls.** Apply each targeted change individually.
+* **Search String Precision:** The `search` string must be *exactly* as it appears in the file, including whitespace, and it must be *unique* within that file. Ambiguous or non-existent search strings will cause the patch to fail.
+* **Replacement Formatting:** The `replace` string must contain the exact code you want to insert. **Crucially, ensure it maintains the correct indentation** relative to the surrounding code block to avoid syntax errors.
 """
+
 
 class Agent:
     MAX_TOOL_CALLS = 10
+    REMAINING_CALLS_WARNING = 5
 
     def __init__(self, model:str = "openai/gpt-4.1-mini", api_base: str|None = None, thinking: bool = False, temperature: float = 0.7):
         """
@@ -77,12 +75,10 @@ class Agent:
         )
         if model.startswith(("openai/", "anthropic/")):
             self.llm_kwargs.pop("chat_template_kwargs")  # not supported by these providers
-            
-        logger.info(f"Initialized agent with model: {model}")
 
     def _reset(self):
         self.remaining = self.MAX_TOOL_CALLS
-        self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self.messages = [{"role": "system", "content": SYSTEM_PROMPT.format(MAX_TOOL_CALLS=self.MAX_TOOL_CALLS)}]
 
         ts = datetime.now().isoformat(timespec="seconds")
         self.out_dir = Path(".nano-agent")/ts ; self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -98,49 +94,53 @@ class Agent:
         self.tools_file.open("a").write(json.dumps(self.tools, ensure_ascii=False, indent=4))
         self.metadata_file.open("a").write(json.dumps({"model": self.model_id, "api_base": self.api_base, "temperature": self.temperature}, ensure_ascii=False, indent=4))
 
-    def run(self, repo_root: str|Path, task: str):
+    def run(self, repo_root: str|Path, task: str) -> str:
+        """
+        Run the agent on the given repository with the given task.
+        Returns the unified diff of the changes made to the repository.
+        """
         self._reset()
         cwd = repo_root = Path(repo_root).absolute()
 
         assert cwd.exists(), "Repository not found"
         assert is_git_repo(cwd), "Must be run inside a git repository"
-        
-        self.remaining = self.MAX_TOOL_CALLS
-        self._append({"role": "user", "content": task})
-        
-        logger.info(f"Starting agent run in {repo_root} with task: {task[:50]}...")
+        assert is_clean(cwd), "Repository must be clean"
 
+        self._append({"role": "user", "content": task})
+
+        self.remaining = self.MAX_TOOL_CALLS
         while True:
             if self.remaining < 0:
                 break
 
             msg = self._chat()
 
-            assert "tool_calls" in msg, "Assistant returned plain text without tool calls"
-            assert len(msg["tool_calls"]) == 1, "Assistant returned multiple tool calls"
+            if not "tool_calls" in msg:
+                break  # agent done or didn't understand the assignment
 
-            call = msg["tool_calls"][0]
-            name = call["function"]["name"]
-            args = json.loads(call["function"]["arguments"])
+            for call in msg["tool_calls"]:
+                name = call["function"]["name"]
+                args = json.loads(call["function"]["arguments"])
 
-            if name == "shell":
-                output, cwd = shell(
-                    args["cmd"],
-                    cwd=cwd,
-                    repo_root=repo_root,
-                    remaining_tool_calls=self.remaining,
-                )
-            elif name == "apply_patch":
-                unified_diff = apply_patch(
-                    repo_root,
-                    args,
-                )
-                return unified_diff
-            else:
-                raise ValueError(f"Unknown tool: {name}")
+                if name == "shell":
+                    output, cwd = shell(
+                        args["cmd"],
+                        cwd=cwd,
+                        repo_root=repo_root,
+                        remaining_tool_calls=self.remaining,
+                    )
+                elif name == "apply_patch":
+                    output = apply_patch(
+                        repo_root,
+                        args,
+                    )
+                else:
+                    raise ValueError(f"Unknown tool: {name}")
             
             self._tool_reply(call, output)
             self.remaining -= 1
+
+        return git_diff(repo_root)
 
     def _chat(self) -> dict:
         reply = litellm.completion(
@@ -169,9 +169,14 @@ class Agent:
         self._log({"message": msg})
         
     def _tool_reply(self, call: dict, output: str):
+        if self.remaining < self.REMAINING_CALLS_WARNING:
+            warning_message = f"[SYSTEM WARNING: Only {self.remaining} tool calls remaining. Apply your patch soon]\n"
+        else:
+            warning_message = ""
+            
         self._append({
             "role": "tool",
-            "content": output,
+            "content": warning_message + output,
             "tool_call_id": call["id"]
         })
 
