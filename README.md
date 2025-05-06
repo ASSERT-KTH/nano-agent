@@ -27,20 +27,21 @@ apply_patch({...})  # search/replace on one file
 
 Nothing else.
 
-No internal state modeling, no fuzzy patching, no hidden prompts or repo graphs.  
-You get the raw reasoning, tool calls, and results. I.e. exactly what the model saw and did!
-
 ---
 
 ## Why it exists
 
 Most coding agents (e.g. Aider, SWE-Agent, Devin) are designed to perform well. To achieve that, they bake in layers of effective but ad-hoc solutions:  
-navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
+repo maps, navigation memory, multi agent orchestration, adherence prompting, retry logic,...
 
 These make agents more *capable*, but also more *opaque*. They're hard to analyze, and thus harder to adopt.
 
-`Nano` takes the opposite stance:  
+`Nano` takes the opposite stance: 
+ 
 Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from encoding human intuitions, but from **letting models learn their own strategies**, even if they start out worse.  
+
+Effective reinforcement learning relies on a complete and unaltered log of agent interactions. `Nano` ensures this transparency by providing direct, non-obfuscated access to the raw reasoning, tool calls, and results, offering a precise record of what the model saw and did.
+
 That's what `Nano` tries to provide.
 
 ---
@@ -50,7 +51,7 @@ That's what `Nano` tries to provide.
 ```bash
 git clone git@github.com:BjarniHaukur/nano-agent.git && cd nano-agent && pip install -e .
 # or
-pip install nano-agent  # TODO: publish
+pip install nano-agent
 ```
 
 Then you just need an API key for your chosen provider or host them yourself with [vLLM](https://docs.vllm.ai/en/latest/). See [litellm](https://docs.litellm.ai/docs/) documentation for more details.
