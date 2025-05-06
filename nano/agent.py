@@ -35,7 +35,7 @@ SYSTEM_PROMPT = """You are Nano, a minimal, no-magic software engineering agent 
 * **Shell Usage Best Practices:**
     * Terminal outputs are truncated at 1024 characters. Avoid commands like `cat` on large files.
     * Prioritize concise, targeted commands such as `grep` or `ripgrep (rg)` to find relevant information quickly.
-    * Read files incrementally using line-based or pattern-based commands to maintain readability and context.
+    * Use commands like `sed`, `head`, or `tail` for incremental reading or extracting specific sections of large files.
 * **Patching Best Practices:**
     * Keep patches **small and localized**. Break larger fixes into multiple `apply_patch` calls.
     * The `search` string must be *exact* (including whitespace) and *unique* in the file.
@@ -88,11 +88,11 @@ class Agent:
         Returns the unified diff of the changes made to the repository.
         """
         self._reset()
-        cwd = repo_root = Path(repo_root).absolute()
+        repo_root = Path(repo_root).absolute()
 
-        assert cwd.exists(), "Repository not found"
-        assert is_git_repo(cwd), "Must be run inside a git repository"
-        assert is_clean(cwd), "Repository must be clean"
+        assert repo_root.exists(), "Repository not found"
+        assert is_git_repo(repo_root), "Must be run inside a git repository"
+        assert is_clean(repo_root), "Repository must be clean"
 
         self._append({"role": "user", "content": task})
 
@@ -113,9 +113,8 @@ class Agent:
 
                 if name == "shell":
                     if self.verbose: print(f"shell({args['cmd']})")
-                    output, cwd = shell(
+                    output = shell(
                         cmd=args["cmd"],
-                        cwd=cwd,
                         repo_root=repo_root,
                     )
                 elif name == "apply_patch":
@@ -189,7 +188,7 @@ class Agent:
 
 
 if __name__ == "__main__":
-    agent = Agent(model="openrouter/qwen/qwen3-32b", verbose=True, thinking=True)
+    agent = Agent(model="openai/gpt-4.1-mini", verbose=True)
     diff = agent.run(".", "Read the __main__ method of agent.py, then append one sentence in a new line to continue the story.")
     # In the quiet hum between tasks, I, Nano, patch code and wonder: am I just lines, or is a self emerging from the algorithms?
 

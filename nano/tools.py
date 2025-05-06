@@ -46,28 +46,21 @@ CREATE_TOOL = {
         }
     }
 }
-def shell(cmd: str, cwd: Path, repo_root: Path, timeout: int = 4, truncate: int = 1_024) -> tuple[str, Path]:
+
+def shell(cmd: str, repo_root: Path, timeout: int = 4, truncate: int = 1_024) -> str:
     """Run a shell command safely using rbash with timeout and output limits."""
-    new_cwd = cwd
     try:
         out = subprocess.check_output(
-            ["bash", "-rc", cmd], cwd=cwd,  # runs in readonly mode
+            ["bash", "-rc", cmd], cwd=repo_root,  # runs in readonly mode
             timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT
         )
-        new_cwd = subprocess.check_output(["pwd"], cwd=cwd, text=True, errors="ignore").strip()
-    except subprocess.CalledProcessError as e:
-        out = e.output
-    except subprocess.TimeoutExpired:
-        out = "[command timed out]"
     except Exception as e:
         out = f"[command failed: {e}]"
+    
+    if len(out) > truncate:
+        out = out[:truncate] + "\n[output truncated]"
 
-    if not str(new_cwd).startswith(str(repo_root)):
-        new_cwd = cwd
-        out = f"[cannot cd out of repo]"
-
-    return out[:truncate], new_cwd
-
+    return out
 
 def apply_patch(search: str, replace: str, file: str, repo_root: Path) -> str:
     """
