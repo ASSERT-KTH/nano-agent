@@ -1,10 +1,8 @@
 from setuptools import setup, find_packages
 
-from nano import __version__
-
 setup(
     name="nano",
-    version=__version__,
+    version="0.1.1",
     packages=find_packages(),
     install_requires=[
         "litellm>=1.68.0",
