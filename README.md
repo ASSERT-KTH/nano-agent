@@ -4,11 +4,11 @@
 
 # Nano
 
-*A minimal, no‑magic coding‑agent for:*
+*A minimal coding‑agent for:*
 
 1. agent‑in‑the‑loop reinforcement learning  
 2. understanding coding agents in clear, minimal terms  
-3. running neat little code fixes with modern LLMs
+3. running neat little code fixes
 
 ---
 
@@ -18,7 +18,7 @@
 
 ```
 
-shell(cmd)  # ls, cat, grep … (stateful, runs in rbash)
+shell(cmd)  # ls, cat, grep …
 apply_patch({...})  # search/replace on one file
 
 ```
@@ -34,7 +34,7 @@ You get the raw reasoning, tool calls, and results. I.e. exactly what the model 
 
 ## Why it exists
 
-Most coding agents (e.g. Aider, SWE-Agent, Devin) are designed to perform well. To achieve that, they bake in layers of human-designed heuristics:  
+Most coding agents (e.g. Aider, SWE-Agent, Devin) are designed to perform well. To achieve that, they bake in layers of effective but ad-hoc solutions:  
 navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
 
 These make agents more *capable*, but also more *opaque*. They're hard to analyze, and thus harder to adopt.
