@@ -1,5 +1,5 @@
 .venv/
-.nano-agent/
+.nano/
 
 **/__pycache__/**
 
