@@ -40,9 +40,8 @@ navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
 These make agents more *capable*, but also more *opaque*. They're hard to analyze, and thus harder to adopt.
 
 `Nano` takes the opposite stance:  
-Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies**, even if they start out worse.  
+Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from encoding human intuitions, but from **letting models learn their own strategies**, even if they start out worse.  
 That's what `Nano` tries to provide.
-
 
 ---
 
