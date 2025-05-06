@@ -1,7 +1,8 @@
-# Nano
 <p align="center">
   <img src="nano.svg"/>
 </p>
+
+# Nano
 
 *A minimal, no‑magic coding‑agent for:*
 
@@ -27,7 +28,7 @@ apply_patch({...})  # search/replace on one file
 Nothing else.
 
 No internal state modeling, no fuzzy patching, no hidden prompts or repo graphs.  
-You get the raw reasoning, tool calls, and results — exactly what the model saw and did.
+You get the raw reasoning, tool calls, and results. I.e. exactly what the model saw and did!
 
 ---
 
@@ -36,11 +37,10 @@ You get the raw reasoning, tool calls, and results — exactly what the model sa
 Most coding agents (e.g. Aider, SWE-Agent, Devin) are designed to perform well. To achieve that, they bake in layers of human-designed heuristics:  
 navigation memory, prompt rewriting, hand-crafted repo maps, retry logic...
 
-These make agents more *capable*, but also more *opaque*.  
-They're hard to analyze, and thus hard to adopt to generate rollout training data.
+These make agents more *capable*, but also more *opaque*. They're hard to analyze, and thus harder to adopt.
 
 `Nano` takes the opposite stance:  
-Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies** — even if they start out worse.  
+Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from human intuition, but from **letting models learn their own strategies**, even if they start out worse.  
 That's what `Nano` tries to provide.
 
 
