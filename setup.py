@@ -9,7 +9,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "nano_agent=nano_agent.cli:main",
+            "nano_agent=nano.cli:main",  # we shouldn't overload "nano"
         ],
     },
     author="Bjarni Haukur",
