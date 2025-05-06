@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
+from nano import __version__
+
 setup(
     name="nano",
-    version="0.1.0",
+    version=__version__,
     packages=find_packages(),
     install_requires=[
         "litellm>=1.68.0",
@@ -14,10 +16,10 @@ setup(
     },
     author="Bjarni Haukur",
     author_email="bjarnihaukur11@gmail.com",
-    description="A minimal, zero-frills coding-agent scaffold for research on agent-in-the-loop training",
+    description="Nano: A minimal, zero-frills coding-agent for research on agent-in-the-loop training",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/ASSERT-KTH/nano-agent",
+    url="https://github.com/BjarniHaukur/nano-agent",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
