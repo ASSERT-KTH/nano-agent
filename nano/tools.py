@@ -5,7 +5,7 @@ SHELL_TOOL = {
     "type": "function",
     "function": {
         "name": "shell",
-        "description": "Run a read-only shell command inside the repo.",
+        "description": "Run a read-only shell command inside the repository. Terminal outputs longer than 1024 characters will be truncated. Prefer concise commands that produce manageable output lengths.",
         "parameters": {
             "type": "object",
             "properties": {"cmd": {"type": "string"}},
@@ -18,7 +18,7 @@ PATCH_TOOL = {
     "type":"function",
     "function":{
         "name":"apply_patch",
-        "description":"Apply a SEARCH/REPLACE patch to one file",
+        "description": "Apply a single, exact, literal SEARCH/REPLACE operation to a file. The SEARCH string is matched exactly as given, without regex or pattern matching. Ensure the search string uniquely matches exactly one location in the file, including whitespace and indentation.",
         "parameters":{
             "type":"object",
             "properties":{
