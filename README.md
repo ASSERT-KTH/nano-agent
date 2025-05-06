@@ -23,7 +23,8 @@ apply_patch({...})  # search/replace on one file
 
 ```
 
-> **Note:** Nano runs commands in `rbash` (restricted bash), which helps provide a safer execution environment by limiting access to certain operations.
+> **Note:** `Nano` uses `rbash` (restricted bash) to confine the agent to its designated workspace. This, along with Nano's requirement of starting in a clean git repository, helps ensure its operations remain contained and predictable.
+
 
 Nothing else.
 
@@ -61,8 +62,8 @@ Then you just need an API key for your chosen provider or host them yourself wit
 ## Example: rollout to Tensor
 
 ```python
+from nano import Agent
 from transformers import AutoTokenizer
-from nano_agent import Agent
 
 agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=True)
 agent.run(".", "There is a bug in this repo...")
@@ -81,7 +82,7 @@ tokens = tokenizer.apply_chat_template(
 ```python
 import tempfile
 from git import Repo  # git-python
-from nano_agent import Agent
+from nano import Agent
 from datasets import load_dataset
 
 run = load_dataset("SWE-Gym/SWE-Gym", split="train[:1]")[0]
@@ -103,7 +104,7 @@ print(agent.messages, agent.tools)  # or access in `.nano/<timestamp>/
 
 ## Use with HuggingFace TRL
 
-Because `Nano` can communicate with any OpenAI compatible endpoint and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
+Because `Nano` can communicate with any tool-enabled OpenAI compatible endpoint and produces token-level message logs, it works "cleanly" as a data generator inside **TRL's `GPROTrainer`**.
 
 > **Note:** "cleanly" refers to modifications made in our [TRL fork](https://github.com/ASSERT-KTH/trl) to enable direct agent integration. These changes support the [CodeRepairRL](https://github.com/ASSERT-KTH/CodeRepairRL) project but may not be merged into the main HuggingFace repository.
 

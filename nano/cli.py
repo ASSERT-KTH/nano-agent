@@ -28,7 +28,7 @@ def main():
         max_tool_calls=args.max_tool_calls,
         verbose=args.verbose,
     )
-    agent.run(args.path, args.task)
+    agent.run(args.task, args.path)
 
 if __name__ == "__main__":
     main()

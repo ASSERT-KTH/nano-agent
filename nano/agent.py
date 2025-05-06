@@ -82,13 +82,13 @@ class Agent:
         if model.startswith(("openai/", "anthropic/")):
             self.llm_kwargs.pop("chat_template_kwargs")  # not supported by these providers
 
-    def run(self, repo_root: str|Path, task: str) -> str:
+    def run(self, task: str, repo_root: str|Path|None = None) -> str:
         """
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
         """
         self._reset()
-        repo_root = Path(repo_root).absolute()
+        repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
 
         assert repo_root.exists(), "Repository not found"
         assert is_git_repo(repo_root), "Must be run inside a git repository"
