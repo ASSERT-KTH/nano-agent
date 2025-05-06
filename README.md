@@ -10,7 +10,7 @@
 
 ## What it is
 
-`nano‑agent` is a zero‑bloat wrapper that turns any OpenAI‑style LLM into a coding agent with two tools:
+`nano‑agent` is a zero‑bloat wrapper that turns any tool-enabled LLM into a coding agent with two tools:
 
 ```
 
@@ -87,7 +87,7 @@ tempdir = tempfile.mkdtemp()
 Repo.clone_from(f"https://github.com/{run['repo']}.git", tempdir)
 
 agent = Agent(
-    model="hosted_vllm/qwen3-8b",  # in GRPO RL settings, rollouts are generated on-policy
+    model="hosted_vllm/qwen/qwen3-8b",
     api_base="http://localhost:8000/v1",
     thinking=True  # enables <think> ... </think> reasoning blocks
 )
