@@ -97,7 +97,7 @@ agent = Agent(
 )
 diff = agent.run(run["problem_statement"], repo_root=tempdir)
 print(diff)  # the unified diff produced by the agent
-print(agent.messages, agent.tools)  # or access in `.nano/<timestamp>/
+print(agent.messages, agent.tools)  # or access in `~/.nano/<timestamp>/
 ```
 
 ---

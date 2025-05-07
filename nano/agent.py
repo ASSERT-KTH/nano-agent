@@ -87,13 +87,13 @@ class Agent:
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
         """
-        self._reset()
         repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
 
         assert repo_root.exists(), "Repository not found"
         assert is_git_repo(repo_root), "Must be run inside a git repository"
         assert is_clean(repo_root), "Repository must be clean"
 
+        self._reset()  # initializes the internal history and trajectory files
         self._append({"role": "user", "content": task})
 
         self.remaining = self.max_tool_calls
@@ -170,7 +170,7 @@ class Agent:
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         ts = datetime.now().isoformat(timespec="seconds")
-        self.out_dir = Path(".nano")/ts
+        self.out_dir = Path("~/.nano").expanduser()/ts  # save to user's home dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
