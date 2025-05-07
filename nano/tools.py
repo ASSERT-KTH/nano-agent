@@ -47,8 +47,13 @@ CREATE_TOOL = {
     }
 }
 
-def shell(cmd: str, repo_root: Path, timeout: int = 4, truncate: int = 1_024) -> str:
+def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 1_024) -> str:
     """Run a shell command safely using rbash with timeout and output limits."""
+    if "cmd" not in args:
+        return "[invalid `shell` arguments]"
+    
+    cmd = args["cmd"]
+
     try:
         out = subprocess.check_output(
             ["bash", "-rc", cmd], cwd=repo_root,  # runs in readonly mode
@@ -62,11 +67,16 @@ def shell(cmd: str, repo_root: Path, timeout: int = 4, truncate: int = 1_024) ->
 
     return out
 
-def apply_patch(search: str, replace: str, file: str, repo_root: Path) -> str:
+def apply_patch(args: dict, repo_root: Path) -> str:
     """
     Apply a literal search/replace to one file.
     Returns (True, diff) if the patch was applied, (False, error) otherwise.
     """
+    if "search" not in args or "replace" not in args or "file" not in args:
+        return "[invalid `apply_patch` arguments]"
+    
+    search, replace, file = args["search"], args["replace"], args["file"]
+
     try:
         target = repo_root / file
 

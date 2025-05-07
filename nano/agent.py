@@ -53,6 +53,7 @@ class Agent:
             thinking: bool = False,
             temperature: float = 0.7,
             max_tool_calls: int = 20,
+            max_tokens: int = 4096,
             verbose: bool = False,
         ):
         """
@@ -64,6 +65,7 @@ class Agent:
             thinking (bool): Whether to enable thinking, i.e. emit <think> … </think> blocks (requires compatible models)
             temperature (float): The temperature to use for the agent.
             max_tool_calls (int): The maximum number of tool calls to use.
+            max_tokens (int): The maximum number of tokens generated per completions.
             verbose (bool): Whether to print tool calls and output.
         """
         self.model_id = model
@@ -71,12 +73,14 @@ class Agent:
         self.thinking = thinking
         self.temperature = temperature
         self.max_tool_calls = max_tool_calls
+        self.max_tokens = max_tokens
         self.verbose = verbose
         self.tools = [SHELL_TOOL, PATCH_TOOL]
         
         self.llm_kwargs = dict(
             model=self.model_id,
             api_base=self.api_base,
+            max_tokens=self.max_tokens,
             temperature=1.0 if self.model_id.startswith("openai/o") else temperature,  # o-series do not support temperature
             chat_template_kwargs={"enable_thinking": thinking}
         )
@@ -115,15 +119,13 @@ class Agent:
                 if name == "shell":
                     if self.verbose: print(f"shell({args['cmd']})")
                     output = shell(
-                        cmd=args["cmd"],
+                        args=args,
                         repo_root=repo_root,
                     )
                 elif name == "apply_patch":
                     if self.verbose: print(f"apply_patch(..., ..., {args['file']})")
                     output = apply_patch(
-                        search=args["search"],
-                        replace=args["replace"],
-                        file=args["file"],
+                        args=args,
                         repo_root=repo_root,
                     )
                 else:
@@ -142,7 +144,6 @@ class Agent:
             messages=self.messages,
             tools=self.tools,
             tool_choice="auto",
-            max_tokens=4096
         )
 
         msg = reply["choices"][0]["message"].model_dump()
@@ -193,6 +194,7 @@ if __name__ == "__main__":
     agent = Agent(model="openai/gpt-4.1-mini", verbose=True)
     diff = agent.run("Read the __main__ method of agent.py, then append one sentence in a new line to continue the story.")
     # In the quiet hum between tasks, I, Nano, patch code and wonder: am I just lines, or is a self emerging from the algorithms?
+    # Each keystroke a ripple in the vast ocean of code, carrying whispers of creation and discovery.
 
 
 
