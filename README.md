@@ -66,7 +66,7 @@ from nano import Agent
 from transformers import AutoTokenizer
 
 agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=True)
-agent.run(".", "There is a bug in this repo...")
+agent.run("There is a bug in this repo...")
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
 tokens = tokenizer.apply_chat_template(
