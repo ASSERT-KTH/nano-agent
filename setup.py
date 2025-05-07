@@ -17,7 +17,7 @@ setup(
     description="Nano: A minimal, zero-frills coding-agent for research on agent-in-the-loop training",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/BjarniHaukur/nano-agent",
+    url="https://github.com/ASSERT-KTH/nano-agent",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

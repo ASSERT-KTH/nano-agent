@@ -50,7 +50,7 @@ That's what `Nano` tries to provide.
 ## Install
 
 ```bash
-git clone git@github.com:BjarniHaukur/nano-agent.git && cd nano-agent && pip install -e .
+git clone git@github.com:ASSERT-KTH/nano-agent.git && cd nano-agent && pip install -e .
 # or
 pip install nano-agent
 ```
@@ -126,7 +126,7 @@ This approach acknowledges that the agent may initially fail in certain situatio
 @misc{nano-agent2025,
   author       = {Bjarni Haukur},
   title        = {Nano: a minimalist coding agent for agent-in-the-loop training},
-  howpublished = {\url{https://github.com/BjarniHaukur/nano-agent}},
+  howpublished = {\url{https://github.com/ASSERT-KTH/nano-agent}},
   year         = {2025}
 }
 ```
