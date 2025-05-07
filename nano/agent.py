@@ -128,8 +128,8 @@ class Agent:
                 else:
                     raise ValueError(f"Unknown tool: {name}")
             
-            self._tool_reply(call, output)
-            self.remaining -= 1
+                self._tool_reply(call, output)
+                self.remaining -= 1
 
         unified_diff = git_diff(repo_root)
         self.diff_file.open("w").write(unified_diff)
@@ -156,7 +156,7 @@ class Agent:
         
     def _tool_reply(self, call: dict, output: str):
         if 0 < self.remaining < self.REMAINING_CALLS_WARNING:
-            warning_message = f"[SYSTEM WARNING: Only {self.remaining} tool calls remaining. Finish your task soon]\n"
+            warning_message = f"[SYSTEM WARNING: Only {self.remaining} tool calls remaining. Finish your task soon!]\n"
         else:
             warning_message = ""
             
@@ -170,7 +170,8 @@ class Agent:
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         ts = datetime.now().isoformat(timespec="seconds")
-        self.out_dir = Path(".nano")/ts ; self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.out_dir = Path(".nano")/ts
+        self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
         self.tools_file = self.out_dir/"tools.json"
@@ -189,7 +190,7 @@ class Agent:
 
 if __name__ == "__main__":
     agent = Agent(model="openai/gpt-4.1-mini", verbose=True)
-    diff = agent.run(".", "Read the __main__ method of agent.py, then append one sentence in a new line to continue the story.")
+    diff = agent.run("Read the __main__ method of agent.py, then append one sentence in a new line to continue the story.")
     # In the quiet hum between tasks, I, Nano, patch code and wonder: am I just lines, or is a self emerging from the algorithms?
 
 
