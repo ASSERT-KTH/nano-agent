@@ -117,19 +117,19 @@ class Agent:
                 args = json.loads(call["function"]["arguments"])
 
                 if name == "shell":
-                    if self.verbose: print(f"shell({args['cmd']})")
+                    if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "")
                     output = shell(
                         args=args,
                         repo_root=repo_root,
                     )
                 elif name == "apply_patch":
-                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})")
+                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "")
                     output = apply_patch(
                         args=args,
                         repo_root=repo_root,
                     )
                 else:
-                    raise ValueError(f"Unknown tool: {name}")
+                    output = f"[unknown tool: {name}]"
             
                 self._tool_reply(call, output)
                 self.remaining -= 1
@@ -165,7 +165,7 @@ class Agent:
         self._append({
             "role": "tool",
             "content": warning_message + output,
-            "tool_call_id": call["id"]
+            "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically, not by the model
         })
 
     def _reset(self):
