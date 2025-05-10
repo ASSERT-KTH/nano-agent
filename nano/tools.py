@@ -47,7 +47,7 @@ CREATE_TOOL = {
     }
 }
 
-def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 1_024) -> str:
+def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 512 * 4) -> str:  # 4 characters ~= 1 token
     """Run a shell command safely using rbash with timeout and output limits."""
     if "cmd" not in args:
         return "[invalid `shell` arguments]"
@@ -56,7 +56,7 @@ def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 1_024) 
 
     try:
         out = subprocess.check_output(
-            ["bash", "-rc", cmd], cwd=repo_root,  # runs in readonly mode
+            ["bash", "-rc", cmd], cwd=repo_root,
             timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT
         )
     except Exception as e:

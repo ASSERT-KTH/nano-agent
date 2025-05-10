@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="nano-agent",
-    version="0.3.1",
+    version="0.3.3",
     packages=find_packages(),
     install_requires=[
         "litellm>=1.68.0",

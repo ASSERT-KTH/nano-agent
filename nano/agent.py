@@ -50,42 +50,41 @@ class Agent:
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
             api_base: str|None = None,
-            thinking: bool = False,
-            temperature: float = 0.7,
             max_tool_calls: int = 20,
-            max_tokens: int = 4096,
             verbose: bool = False,
+            thinking: bool = False,
+            max_tokens: int = 4096,
+            temperature: float = 0.7,
+            top_p: float = 0.9,
+            top_k: int = 20,
         ):
-        """
-        Initialize the agent with the given model and configuration.
+        """Initialize a Nano instance.
 
         Args:
-            model (str): The model to use for the agent. LiteLLM syntax (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
-            api_base (Optional[str]): For plugging in a local server (e.g. "http://localhost:8000/v1")
-            thinking (bool): Whether to enable thinking, i.e. emit <think> … </think> blocks (requires compatible models)
-            temperature (float): The temperature to use for the agent.
-            max_tool_calls (int): The maximum number of tool calls to use.
-            max_tokens (int): The maximum number of tokens generated per completions.
-            verbose (bool): Whether to print tool calls and output.
+            model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
+            api_base (str, optional): Base URL for API endpoint, useful for local servers
+            max_tool_calls (int): Maximum number of tool calls the agent can make before stopping
+            verbose (bool): If True, prints tool calls and their outputs
+            thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
+            max_tokens (int): Maximum tokens per completion response
+            temperature (float): Sampling temperature, higher means more random
+            top_p (float): Nucleus sampling parameter, lower means more focused
+            top_k (int): Top-k sampling parameter, lower means more focused
         """
-        self.model_id = model
-        self.api_base = api_base
-        self.thinking = thinking
-        self.temperature = temperature
         self.max_tool_calls = max_tool_calls
-        self.max_tokens = max_tokens
         self.verbose = verbose
         self.tools = [SHELL_TOOL, PATCH_TOOL]
         
         self.llm_kwargs = dict(
-            model=self.model_id,
-            api_base=self.api_base,
-            max_tokens=self.max_tokens,
-            temperature=1.0 if self.model_id.startswith("openai/o") else temperature,  # o-series do not support temperature
-            chat_template_kwargs={"enable_thinking": thinking}
+            model=model,
+            api_base=api_base,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            chat_template_kwargs={"enable_thinking": thinking},
+            drop_params=True,  # drop params that are not supported by the endpoint
         )
-        if model.startswith(("openai/", "anthropic/")):
-            self.llm_kwargs.pop("chat_template_kwargs")  # not supported by these providers
 
     def run(self, task: str, repo_root: str|Path|None = None) -> str:
         """
@@ -117,19 +116,19 @@ class Agent:
                 args = json.loads(call["function"]["arguments"])
 
                 if name == "shell":
-                    if self.verbose: print(f"shell({args['cmd']})")
+                    if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "")
                     output = shell(
                         args=args,
                         repo_root=repo_root,
                     )
                 elif name == "apply_patch":
-                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})")
+                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "")
                     output = apply_patch(
                         args=args,
                         repo_root=repo_root,
                     )
                 else:
-                    raise ValueError(f"Unknown tool: {name}")
+                    output = f"[unknown tool: {name}]"
             
                 self._tool_reply(call, output)
                 self.remaining -= 1
@@ -165,7 +164,7 @@ class Agent:
         self._append({
             "role": "tool",
             "content": warning_message + output,
-            "tool_call_id": call["id"]
+            "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically, not by the model
         })
 
     def _reset(self):
@@ -187,7 +186,7 @@ class Agent:
 
         self.messages_file.open("a").write(json.dumps(self.messages[0], ensure_ascii=False, sort_keys=True) + "\n")
         self.tools_file.open("a").write(json.dumps(self.tools, ensure_ascii=False, indent=4, sort_keys=True))
-        self.metadata_file.open("a").write(json.dumps({"model": self.model_id, "api_base": self.api_base, "temperature": self.temperature}, ensure_ascii=False, indent=4))
+        self.metadata_file.open("a").write(json.dumps(self.llm_kwargs, ensure_ascii=False, indent=4))
 
 
 if __name__ == "__main__":
