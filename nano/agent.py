@@ -1,3 +1,4 @@
+import uuid
 import json
 from pathlib import Path
 from datetime import datetime
@@ -116,13 +117,13 @@ class Agent:
                 args = json.loads(call["function"]["arguments"])
 
                 if name == "shell":
-                    if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "")
+                    if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "invalid shell call")
                     output = shell(
                         args=args,
                         repo_root=repo_root,
                     )
                 elif name == "apply_patch":
-                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "")
+                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "invalid apply_patch call")
                     output = apply_patch(
                         args=args,
                         repo_root=repo_root,
@@ -171,7 +172,8 @@ class Agent:
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         ts = datetime.now().isoformat(timespec="seconds")
-        self.out_dir = Path("~/.nano").expanduser()/ts  # save to user's home dir
+        unique_id = str(uuid.uuid4())[:8]
+        self.out_dir = Path("~/.nano").expanduser()/f"{ts}-{unique_id}"  # save to user's home dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
