@@ -48,7 +48,7 @@ CREATE_TOOL = {
 }
 
 def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 512 * 4) -> str:  # 4 characters ~= 1 token
-    """Run a shell command safely using rbash with timeout and output limits."""
+    """Run a shell command using rbash with timeout and output limits."""
     if "cmd" not in args:
         return "[invalid `shell` arguments]"
     
