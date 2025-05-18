@@ -47,6 +47,7 @@ SYSTEM_PROMPT = """You are Nano, a minimal, no-magic software engineering agent 
 
 class Agent:
     REMAINING_CALLS_WARNING = 5
+    REMAINING_TOKENS_WARNING = 2000  # Reserve token buffer
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
@@ -58,6 +59,7 @@ class Agent:
             temperature: float = 0.7,
             top_p: float = 0.9,
             top_k: int = 20,
+            context_window: int = 8192,
         ):
         """Initialize a Nano instance.
 
@@ -71,15 +73,17 @@ class Agent:
             temperature (float): Sampling temperature, higher means more random
             top_p (float): Nucleus sampling parameter, lower means more focused
             top_k (int): Top-k sampling parameter, lower means more focused
+            context_window (int): Size of the context window in tokens
         """
         self.max_tool_calls = max_tool_calls
         self.verbose = verbose
         self.tools = [SHELL_TOOL, PATCH_TOOL]
+        self.context_window = context_window
+        self.max_tokens = max_tokens
         
         self.llm_kwargs = dict(
             model=model,
             api_base=api_base,
-            max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -157,7 +161,14 @@ class Agent:
         self.messages_file.open("a").write(json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
         
     def _tool_reply(self, call: dict, output: str):
-        if 0 < self.remaining < self.REMAINING_CALLS_WARNING:
+        # Check token count with litellm
+        tokens = litellm.token_counter(self.messages, model=self.llm_kwargs["model"])
+        self.total_tokens = tokens
+        
+        # Token warning takes precedence over tool calls warning
+        if tokens < self.context_window - self.REMAINING_TOKENS_WARNING:
+            warning_message = f"[SYSTEM WARNING: Context window is {self.context_window - tokens} tokens from filling up. Finish your task now!]\n"
+        elif 0 < self.remaining < self.REMAINING_CALLS_WARNING:
             warning_message = f"[SYSTEM WARNING: Only {self.remaining} tool calls remaining. Finish your task soon!]\n"
         else:
             warning_message = ""
@@ -170,6 +181,7 @@ class Agent:
 
     def _reset(self):
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self.total_tokens = 0  # Track total tokens used
 
         ts = datetime.now().isoformat(timespec="seconds")
         unique_id = str(uuid.uuid4())[:8]
