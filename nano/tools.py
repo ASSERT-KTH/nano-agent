@@ -55,17 +55,22 @@ def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 512 * 4
     cmd = args["cmd"]
 
     try:
-        out = subprocess.check_output(
+        res = subprocess.run(
             ["bash", "-rc", cmd], cwd=repo_root,
-            timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT
+            timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT, stdout=subprocess.PIPE
         )
     except Exception as e:
-        out = f"[command failed: {e}]"
+        return f"[shell failed: {e}]"
+
+    out = res.stdout or ""
+
+    if res.returncode != 0:
+        return f"[command failed: exit {res.returncode}]\n{out or '[no output]'}"
     
     if len(out) > truncate:
         out = out[:truncate] + "\n[output truncated]"
 
-    return out
+    return out.strip() or "[no output]"
 
 def apply_patch(args: dict, repo_root: Path) -> str:
     """
