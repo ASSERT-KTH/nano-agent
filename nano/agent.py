@@ -47,39 +47,45 @@ SYSTEM_PROMPT = """You are Nano, a minimal, no-magic software engineering agent 
 
 class Agent:
     REMAINING_CALLS_WARNING = 5
-    REMAINING_TOKENS_WARNING = 2000  # Reserve token buffer
+    TOKENS_WRAP_UP = 2000  # Start preparing to finish
+    TOKENS_CRITICAL = 1000  # Critical token level, finish immediately
+    MINIMUM_TOKENS = 600  # If we're below this, exit the loop on the next iteration
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
             api_base: str|None = None,
+            context_window: int = 8192,
             max_tool_calls: int = 20,
-            verbose: bool = False,
             thinking: bool = False,
             max_tokens: int = 4096,
             temperature: float = 0.7,
             top_p: float = 0.9,
             top_k: int = 20,
-            context_window: int = 8192,
+            verbose: bool = False,
+            log: bool = True
         ):
         """Initialize a Nano instance.
 
         Args:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
+            context_window (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             max_tool_calls (int): Maximum number of tool calls the agent can make before stopping
-            verbose (bool): If True, prints tool calls and their outputs
             thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             max_tokens (int): Maximum tokens per completion response
             temperature (float): Sampling temperature, higher means more random
             top_p (float): Nucleus sampling parameter, lower means more focused
             top_k (int): Top-k sampling parameter, lower means more focused
-            context_window (int): Size of the context window in tokens
+            verbose (bool): If True, prints tool calls and their outputs
+            log (bool): If True, logs the agent's actions to a file
         """
         self.max_tool_calls = max_tool_calls
-        self.verbose = verbose
-        self.tools = [SHELL_TOOL, PATCH_TOOL]
         self.context_window = context_window
         self.max_tokens = max_tokens
+        self.verbose = verbose
+        self.log = log
+        
+        self.tools = [SHELL_TOOL, PATCH_TOOL]
         
         self.llm_kwargs = dict(
             model=model,
@@ -95,6 +101,9 @@ class Agent:
         """
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
+        
+        Uses simple context management to balance task completion and efficiency.
+        If nearly finished (≤2 tool calls left), continues even when low on tokens.
         """
         repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
 
@@ -105,11 +114,8 @@ class Agent:
         self._reset()  # initializes the internal history and trajectory files
         self._append({"role": "user", "content": task})
 
-        self.remaining = self.max_tool_calls
-        while True:
-            if self.remaining < 0:
-                break
-
+        # Continue if we have enough tokens or we're close to finishing (2 or fewer calls left)
+        while self.remaining_tool_calls >= 0 and (self.remaining_tokens > self.MINIMUM_TOKENS or self.remaining_tool_calls <= 2):
             msg = self._chat()
 
             if not msg.get("tool_calls"):
@@ -122,29 +128,26 @@ class Agent:
 
                 if name == "shell":
                     if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "invalid shell call")
-                    output = shell(
-                        args=args,
-                        repo_root=repo_root,
-                    )
+                    output = shell(args=args, repo_root=repo_root)
+
                 elif name == "apply_patch":
                     if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "invalid apply_patch call")
-                    output = apply_patch(
-                        args=args,
-                        repo_root=repo_root,
-                    )
+                    output = apply_patch(args=args, repo_root=repo_root)
+
                 else:
                     output = f"[unknown tool: {name}]"
             
                 self._tool_reply(call, output)
-                self.remaining -= 1
+                self.remaining_tool_calls -= 1
 
         unified_diff = git_diff(repo_root)
-        self.diff_file.open("w").write(unified_diff)
+        if self.log: self.diff_file.open("w").write(unified_diff)
         return unified_diff
 
     def _chat(self) -> dict:
         reply = litellm.completion(
             **self.llm_kwargs,
+            max_tokens=min(self.max_tokens, self.remaining_tokens),
             messages=self.messages,
             tools=self.tools,
             tool_choice="auto",
@@ -154,22 +157,26 @@ class Agent:
 
         self._append(msg)
 
+        # This does not account for tool reply, but we leave room for error
+        self.remaining_tokens = self.context_window - reply["usage"]["total_tokens"]
+
         return msg
 
     def _append(self, msg: dict):
         self.messages.append(msg)
+
+        if not self.log:
+            return
+
         self.messages_file.open("a").write(json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
         
     def _tool_reply(self, call: dict, output: str):
-        # Check token count with litellm
-        tokens = litellm.token_counter(self.messages, model=self.llm_kwargs["model"])
-        self.total_tokens = tokens
-        
-        # Token warning takes precedence over tool calls warning
-        if tokens < self.context_window - self.REMAINING_TOKENS_WARNING:
-            warning_message = f"[SYSTEM WARNING: Context window is {self.context_window - tokens} tokens from filling up. Finish your task now!]\n"
-        elif 0 < self.remaining < self.REMAINING_CALLS_WARNING:
-            warning_message = f"[SYSTEM WARNING: Only {self.remaining} tool calls remaining. Finish your task soon!]\n"
+        if self.remaining_tokens < self.TOKENS_CRITICAL:
+            warning_message = f"[SYSTEM WARNING: Context window is almost full. Finish your task now!]\n"
+        elif self.remaining_tokens < self.TOKENS_WRAP_UP:
+            warning_message = f"[SYSTEM NOTE: Context window is getting limited. Please start wrapping up your task.]\n"
+        elif self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
+            warning_message = f"[SYSTEM NOTE: Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.]\n"
         else:
             warning_message = ""
             
@@ -181,8 +188,13 @@ class Agent:
 
     def _reset(self):
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        self.total_tokens = 0  # Track total tokens used
+        
+        self.remaining_tool_calls = self.max_tool_calls
+        self.remaining_tokens = self.context_window  # will include the messages after the first _chat
 
+        if not self.log:
+            return
+        
         ts = datetime.now().isoformat(timespec="seconds")
         unique_id = str(uuid.uuid4())[:8]
         self.out_dir = Path("~/.nano").expanduser()/f"{ts}-{unique_id}"  # save to user's home dir
