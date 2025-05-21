@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from nano import Agent
+from agent import Agent
 
 def _parse() -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="nano_agent", description="Minimal CLI for nano‑agent")
