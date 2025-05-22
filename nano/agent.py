@@ -62,8 +62,8 @@ class Agent:
             thinking: bool = False,
             temperature: float = 0.7,
             top_p: float = 0.9,
-            top_k: int = 20,
             min_p: float = 0.0,
+            top_k: int = 20,
             verbose: bool = False,
             log: bool = True
         ):
@@ -77,9 +77,9 @@ class Agent:
             response_limit (int): Maximum tokens per completion response
             thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             temperature (float): Sampling temperature, higher means more random
-            top_p (float): Nucleus sampling parameter, lower means more focused
-            top_k (int): Top-k sampling parameter, lower means more focused
-            min_p (float): Minimum nucleus sampling parameter, lower means more focused
+            top_p (float): Nucleus-sampling cutoff; only tokens comprising the top `p` probability mass are kept.
+            min_p (float): Relative floor for nucleus sampling; tokens below `min_p * max_token_prob` are filtered out.
+            top_k (int): Top-k sampling cutoff; only the highest-probability `k` tokens are considered.
             verbose (bool): If True, prints tool calls and their outputs
             log (bool): If True, logs the agent's actions to a file
         """
@@ -185,7 +185,7 @@ class Agent:
         if self.remaining_tokens < self.TOKENS_CRITICAL:
             warning_message = f"[SYSTEM WARNING: Context window is almost full. Finish your task now!]\n"
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
-            warning_message = f"[SYSTEM NOTE: Context window is getting limited. Please start wrapping up your task.]\n"
+            warning_message = f"[SYSTEM NOTE: Context window is getting limited. Start wrapping up your task!]\n"
         elif self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
             warning_message = f"[SYSTEM NOTE: Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.]\n"
         else:
