@@ -47,10 +47,11 @@ CREATE_TOOL = {
     }
 }
 
-def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 512 * 4) -> str:  # 4 characters ~= 1 token
-    """Run a shell command using rbash with timeout and output limits."""
+def shell(args: dict, repo_root: Path, timeout: int = 4) -> tuple[bool, str]:
+    """Run a shell command using rbash with timeout and output limits.
+    Returns (success, output) tuple."""
     if "cmd" not in args:
-        return "[invalid `shell` arguments]"
+        return (False, "[invalid `shell` arguments]")
     
     cmd = args["cmd"]
 
@@ -60,25 +61,22 @@ def shell(args: dict, repo_root: Path, timeout: int = 4, truncate: int = 512 * 4
             timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT, stdout=subprocess.PIPE
         )
     except Exception as e:
-        return f"[shell failed: {e}]"
+        return (False, f"[shell failed: {e}]")
 
     out = res.stdout or ""
 
     if res.returncode != 0:
-        return f"[command failed: exit {res.returncode}]\n{out or '[no output]'}"
+        return (False, f"[command failed: exit {res.returncode}]\n{out or '[no output]'}")
     
-    if len(out) > truncate:
-        out = out[:truncate] + "\n[output truncated]"
+    return (True, out.strip() or "[no output]")
 
-    return out.strip() or "[no output]"
-
-def apply_patch(args: dict, repo_root: Path) -> str:
+def apply_patch(args: dict, repo_root: Path) -> tuple[bool, str]:
     """
     Apply a literal search/replace to one file.
-    Returns (True, diff) if the patch was applied, (False, error) otherwise.
+    Returns (success, message) tuple.
     """
     if "search" not in args or "replace" not in args or "file" not in args:
-        return "[invalid `apply_patch` arguments]"
+        return (False, "[invalid `apply_patch` arguments]")
     
     search, replace, file = args["search"], args["replace"], args["file"]
 
@@ -86,34 +84,35 @@ def apply_patch(args: dict, repo_root: Path) -> str:
         target = repo_root / file
 
         if not target.exists():
-            return f"[file {target} not found]"
+            return (False, f"[file {target} not found]")
         
         text = target.read_text()
         search_count = text.count(search)
 
         if search_count == 0:
-            return "[search string not found]"
+            return (False, "[search string not found]")
         
         if search_count > 1:
-            return f"[ambiguous search string: {search_count} occurrences]"
+            return (False, f"[ambiguous search string: {search_count} occurrences]")
         
         new_text = text.replace(search, replace, 1)
         target.write_text(new_text)
-        return "[patch applied successfully]"
+        return (True, "[patch applied successfully]")
 
     except Exception as e:
-        return f"[failed to apply patch: {e}]"
+        return (False, f"[failed to apply patch: {e}]")
 
-def create(path: str, content: str) -> str:
-    """Create a new file and write the given content to it."""
+def create(path: str, content: str) -> tuple[bool, str]:
+    """Create a new file and write the given content to it.
+    Returns (success, message) tuple."""
     path = Path(path)
     if path.exists():
-        return f"[file {path} already exists]"
+        return (False, f"[file {path} already exists]")
     
     try:
         path.touch()
         path.write_text(content)
-        return f"[created {path}]"
+        return (True, f"[created {path}]")
     
     except Exception as e:
-        return f"[failed to create {path}: {e}]"
+        return (False, f"[failed to create {path}: {e}]")

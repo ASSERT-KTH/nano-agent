@@ -52,6 +52,7 @@ class Agent:
     TOKENS_WRAP_UP = 3000  # Start preparing to finish
     TOKENS_CRITICAL = 1500  # Critical token level, finish immediately
     MINIMUM_TOKENS = 600  # If we're below this, exit the loop on the next iteration
+    TOOL_TRUNCATE_LENGTH = 500 * 4  # 4 characters ~= 1 token, so 2000 chars ~= 500 tokens
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
@@ -138,16 +139,16 @@ class Agent:
 
                 if name == "shell":
                     if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "invalid shell call")
-                    output = shell(args=args, repo_root=repo_root)
+                    success, output = shell(args=args, repo_root=repo_root)
 
                 elif name == "apply_patch":
                     if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "invalid apply_patch call")
-                    output = apply_patch(args=args, repo_root=repo_root)
+                    success, output = apply_patch(args=args, repo_root=repo_root)
 
                 else:
-                    output = f"[unknown tool: {name}]"
+                    success, output = False, f"[unknown tool: {name}]"
             
-                self._tool_reply(call, output)
+                self._tool_reply(call, success, output)
                 self.remaining_tool_calls -= 1
 
         unified_diff = git_diff(repo_root)
@@ -181,7 +182,11 @@ class Agent:
 
         self.messages_file.open("a").write(json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
         
-    def _tool_reply(self, call: dict, output: str):
+    def _tool_reply(self, call: dict, success: bool, output: str):
+        # Apply truncation if output is too long
+        if len(output) > self.TOOL_TRUNCATE_LENGTH:
+            output = output[:self.TOOL_TRUNCATE_LENGTH] + "\n[output truncated]"
+            
         if self.remaining_tokens < self.TOKENS_CRITICAL:
             warning_message = f"[SYSTEM WARNING: Context window is almost full. Finish your task now!]\n"
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
@@ -190,6 +195,18 @@ class Agent:
             warning_message = f"[SYSTEM NOTE: Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.]\n"
         else:
             warning_message = ""
+            
+        # Log tool call if logging is enabled
+        if self.log:
+            tool_log_entry = {
+                "tool_call_id": call["id"],
+                "function_name": call["function"]["name"],
+                "arguments": call["function"]["arguments"],
+                "success": success,
+                "output": output,
+                "truncated": len(output) > self.TOOL_TRUNCATE_LENGTH
+            }
+            self.tool_log_file.open("a").write(json.dumps(tool_log_entry, ensure_ascii=False, sort_keys=True) + "\n")
             
         self._append({
             "role": "tool",
@@ -201,6 +218,7 @@ class Agent:
         from nano import __version__  # avoids circular import
 
         header = (
+            "\n"
             "  ██████ \n"
             " ████████      Nano v{version}\n"
             " █▒▒▒▒▒▒█      Model: {model} {endpoint_info}\n"
@@ -224,11 +242,11 @@ class Agent:
         self.remaining_tool_calls = self.tool_limit
         self.remaining_tokens = self.token_limit  # will include the messages after the first _chat
 
-        if not self.log:
-            return
-            
         if self.verbose:
             self._print_header()
+        
+        if not self.log:
+            return    
         
         ts = datetime.now().isoformat(timespec="seconds")
         unique_id = str(uuid.uuid4())[:8]
@@ -236,11 +254,13 @@ class Agent:
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
+        self.tool_log_file = self.out_dir/"tool_log.jsonl"
         self.tools_file = self.out_dir/"tools.json"
         self.metadata_file = self.out_dir/"metadata.json"
         self.diff_file = self.out_dir/"diff.txt"
 
         self.messages_file.touch()
+        self.tool_log_file.touch()
         self.tools_file.touch()
         self.metadata_file.touch()
         self.diff_file.touch()
