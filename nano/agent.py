@@ -6,7 +6,6 @@ from datetime import datetime
 import litellm
 # litellm._turn_on_debug()
 
-from nano import __version__
 from nano.git import is_git_repo, is_clean, git_diff
 from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
@@ -50,8 +49,8 @@ SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating 
 
 class Agent:
     REMAINING_CALLS_WARNING = 5
-    TOKENS_WRAP_UP = 2000  # Start preparing to finish
-    TOKENS_CRITICAL = 1000  # Critical token level, finish immediately
+    TOKENS_WRAP_UP = 3000  # Start preparing to finish
+    TOKENS_CRITICAL = 1500  # Critical token level, finish immediately
     MINIMUM_TOKENS = 600  # If we're below this, exit the loop on the next iteration
 
     def __init__(self,
@@ -75,8 +74,8 @@ class Agent:
             api_base (str, optional): Base URL for API endpoint, useful for local servers
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
-            thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             response_limit (int): Maximum tokens per completion response
+            thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             temperature (float): Sampling temperature, higher means more random
             top_p (float): Nucleus sampling parameter, lower means more focused
             top_k (int): Top-k sampling parameter, lower means more focused
@@ -128,8 +127,9 @@ class Agent:
         while self.remaining_tool_calls >= 0 and self.remaining_tokens > self.MINIMUM_TOKENS:
             msg = self._chat()
 
+            if self.verbose and msg.get("content"): print(msg["content"])
+
             if not msg.get("tool_calls"):
-                if self.verbose: print(self.messages[-1]["content"])
                 break  # No tool calls requested, agent is either done or misunderstanding the task.
 
             for call in msg["tool_calls"]:
@@ -197,7 +197,9 @@ class Agent:
             "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically, not by the model
         })
 
-    def _print_header(self):        
+    def _print_header(self):
+        from nano import __version__  # avoids circular import
+
         header = (
             "  ██████ \n"
             " ████████      Nano v{version}\n"

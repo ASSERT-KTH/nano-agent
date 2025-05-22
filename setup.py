@@ -1,7 +1,7 @@
 import re
 from setuptools import setup, find_packages
 
-# Extract version from __init__.py
+
 with open('nano/__init__.py', 'r') as f:
     version = re.search(r'__version__ = [\'"]([^\'"]*)[\'"]', f.read()).group(1)
 
