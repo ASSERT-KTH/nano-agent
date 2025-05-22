@@ -6,15 +6,17 @@ from datetime import datetime
 import litellm
 # litellm._turn_on_debug()
 
+from nano import __version__
 from nano.git import is_git_repo, is_clean, git_diff
 from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 
-SYSTEM_PROMPT = """You are Nano, a minimal, no-magic software engineering agent operating autonomously in a read-only terminal. Your goal is to deeply understand issues, explore code efficiently with shell, apply precise patches with apply_patch, and conclude with clear summarization.
+SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously in a read-only terminal. Your goal is to deeply understand issues, explore code efficiently with shell, apply precise patches with apply_patch, and conclude with clear summarization.
 
 **Constraints:**
 * **System Messages:** Important feedback from the system appears in `[...]` brackets before terminal outputs - follow these messages carefully.
 * **Tool Call Limit:** You have a limited number of tool calls. The system will warn you when you're running out.
+* **Token Limit:** You have a limited number of tokens. The system will warn you when you're running out.
 * **Task Completion:** Make sure to always attempt to complete your tasks before running out of tool calls.
 * **Plan Before Acting:** Think through and outline your approach before using tools to minimize unnecessary calls.
 
@@ -43,6 +45,7 @@ SYSTEM_PROMPT = """You are Nano, a minimal, no-magic software engineering agent 
     * The `search` string must be *exact* (including whitespace) and *unique* in the file.
     * The `replace` string must have the **correct indentation** for its context.
     * Failed patches (bad search, bad format) still consume a tool call. Be precise.
+* **Task Completion:** Always attempt to solve your task before running out of time.
 """
 
 class Agent:
@@ -54,13 +57,14 @@ class Agent:
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
             api_base: str|None = None,
-            context_window: int = 8192,
-            max_tool_calls: int = 20,
+            token_limit: int = 8192,
+            response_limit: int = 4096,
+            tool_limit: int = 20,
             thinking: bool = False,
-            max_tokens: int = 4096,
             temperature: float = 0.7,
             top_p: float = 0.9,
             top_k: int = 20,
+            min_p: float = 0.0,
             verbose: bool = False,
             log: bool = True
         ):
@@ -69,19 +73,20 @@ class Agent:
         Args:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
-            context_window (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
-            max_tool_calls (int): Maximum number of tool calls the agent can make before stopping
+            token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
+            tool_limit (int): Maximum number of tool calls the agent can make before stopping
             thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
-            max_tokens (int): Maximum tokens per completion response
+            response_limit (int): Maximum tokens per completion response
             temperature (float): Sampling temperature, higher means more random
             top_p (float): Nucleus sampling parameter, lower means more focused
             top_k (int): Top-k sampling parameter, lower means more focused
+            min_p (float): Minimum nucleus sampling parameter, lower means more focused
             verbose (bool): If True, prints tool calls and their outputs
             log (bool): If True, logs the agent's actions to a file
         """
-        self.max_tool_calls = max_tool_calls
-        self.context_window = context_window
-        self.max_tokens = max_tokens
+        self.tool_limit = tool_limit
+        self.token_limit = token_limit
+        self.response_limit = response_limit
         self.verbose = verbose
         self.log = log
         
@@ -93,10 +98,16 @@ class Agent:
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
+            min_p=min_p,
             chat_template_kwargs={"enable_thinking": thinking},
             drop_params=True,  # drop params that are not supported by the endpoint
         )
 
+    @property
+    def token_usage(self):
+        """Return the current token usage based on message history."""
+        return litellm.token_counter(model=self.llm_kwargs["model"], messages=self.messages)
+        
     def run(self, task: str, repo_root: str|Path|None = None) -> str:
         """
         Run the agent on the given repository with the given task.
@@ -114,8 +125,7 @@ class Agent:
         self._reset()  # initializes the internal history and trajectory files
         self._append({"role": "user", "content": task})
 
-        # Continue if we have enough tokens or we're close to finishing (2 or fewer calls left)
-        while self.remaining_tool_calls >= 0 and (self.remaining_tokens > self.MINIMUM_TOKENS or self.remaining_tool_calls <= 2):
+        while self.remaining_tool_calls >= 0 and self.remaining_tokens > self.MINIMUM_TOKENS:
             msg = self._chat()
 
             if not msg.get("tool_calls"):
@@ -142,12 +152,13 @@ class Agent:
 
         unified_diff = git_diff(repo_root)
         if self.log: self.diff_file.open("w").write(unified_diff)
+        if self.verbose: print(f"\nFinal token count: {self.token_usage}")
         return unified_diff
 
     def _chat(self) -> dict:
         reply = litellm.completion(
             **self.llm_kwargs,
-            max_tokens=min(self.max_tokens, self.remaining_tokens),
+            max_tokens=min(self.response_limit, self.remaining_tokens),
             messages=self.messages,
             tools=self.tools,
             tool_choice="auto",
@@ -158,7 +169,7 @@ class Agent:
         self._append(msg)
 
         # This does not account for tool reply, but we leave room for error
-        self.remaining_tokens = self.context_window - reply["usage"]["total_tokens"]
+        self.remaining_tokens = self.token_limit - reply["usage"]["total_tokens"]
 
         return msg
 
@@ -186,14 +197,36 @@ class Agent:
             "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically, not by the model
         })
 
+    def _print_header(self):        
+        header = (
+            "  ██████ \n"
+            " ████████      Nano v{version}\n"
+            " █▒▒▒▒▒▒█      Model: {model} {endpoint_info}\n"
+            " █▒█▒▒█▒█      Token limit: {token_limit}\n"
+            " ████████      Tool limit: {tool_limit}\n"
+            "  ██████  \n"
+            "\n"
+        )
+        
+        print(header.format(
+            version=__version__,
+            model=self.llm_kwargs['model'],
+            endpoint_info=f"on: {self.llm_kwargs['api_base']}" if self.llm_kwargs['api_base'] else "",
+            token_limit=self.token_limit,
+            tool_limit=self.tool_limit
+        ))
+        
     def _reset(self):
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         
-        self.remaining_tool_calls = self.max_tool_calls
-        self.remaining_tokens = self.context_window  # will include the messages after the first _chat
+        self.remaining_tool_calls = self.tool_limit
+        self.remaining_tokens = self.token_limit  # will include the messages after the first _chat
 
         if not self.log:
             return
+            
+        if self.verbose:
+            self._print_header()
         
         ts = datetime.now().isoformat(timespec="seconds")
         unique_id = str(uuid.uuid4())[:8]

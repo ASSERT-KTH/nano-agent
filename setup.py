@@ -1,8 +1,13 @@
+import re
 from setuptools import setup, find_packages
+
+# Extract version from __init__.py
+with open('nano/__init__.py', 'r') as f:
+    version = re.search(r'__version__ = [\'"]([^\'"]*)[\'"]', f.read()).group(1)
 
 setup(
     name="nano-agent",
-    version="0.4.0",
+    version=version,
     packages=find_packages(),
     install_requires=[
         "litellm>=1.68.0",
