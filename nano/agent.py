@@ -10,9 +10,9 @@ from datetime import datetime
 
 from nano.git import is_git_repo, is_clean, git_diff
 from nano.tools import (
-    shell, apply_patch, create, deepwiki,
-    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL, DEEPWIKI_TOOL,
-    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES, DEEPWIKI_GUIDELINES
+    shell, apply_patch, create,
+    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL,
+    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES,
 )
 
 # litellm is very slow to import, so we lazy load it
@@ -75,7 +75,6 @@ class Agent:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
             create_tool (bool): If True, then the agent can create files
-            deepwiki_tool (bool): If True, then the agent can query the DeepWiki MCP
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
             response_limit (int): Maximum tokens per completion response
@@ -100,10 +99,6 @@ class Agent:
         if self.create_tool:
             self.tools.append(CREATE_TOOL)
             self.guidelines.append(CREATE_GUIDELINES)
-
-        if self.deepwiki_tool:
-            self.tools.append(DEEPWIKI_TOOL)
-            self.guidelines.append(DEEPWIKI_GUIDELINES)
         
         self.llm_kwargs = dict(
             model=model,
@@ -126,9 +121,6 @@ class Agent:
         """
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
-        
-        Uses simple context management to balance task completion and efficiency.
-        If nearly finished (≤2 tool calls left), continues even when low on tokens.
         """
         repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
 
@@ -159,9 +151,6 @@ class Agent:
 
                 elif name == "create":
                     success, output = create(args=args, repo_root=repo_root, verbose=self.verbose)
-
-                elif name == "deepwiki":
-                    success, output = deepwiki(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 else:
                     success, output = False, f"[unknown tool: {name}]"
