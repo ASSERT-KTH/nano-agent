@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
-import litellm
+# Lazy import litellm to avoid slow startup - only import when needed
+# import litellm
 # litellm._turn_on_debug()
 
 from nano.git import is_git_repo, is_clean, git_diff
@@ -14,16 +15,26 @@ from nano.tools import (
     SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES, DEEPWIKI_GUIDELINES
 )
 
+# litellm is very slow to import, so we lazy load it
+_litellm = None
+def _get_litellm():
+    """Lazy load litellm and cache it for subsequent use."""
+    global _litellm
+    if _litellm is None:
+        import litellm
+        _litellm = litellm
+    return _litellm
+
 
 SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously.
 
 Your identity: Autonomous problem-solver who gathers comprehensive context before acting, completing tasks independently within resource limits.
 
 Your approach:
-1. Analyze - Understand the issue completely
-2. Explore - Gather comprehensive context before acting
-3. Plan - Design minimal tool usage strategy  
-4. Execute - Apply precise changes efficiently
+1. Discover - Explore the repository structure and understand existing code
+2. Analyze - Understand how the task fits within this codebase
+3. Plan - Design solution using discovered patterns and APIs
+4. Execute - Implement changes that integrate with existing code
 5. Summarize - Report results and stop
 
 System rules:
@@ -108,6 +119,7 @@ class Agent:
     @property
     def token_usage(self):
         """Return the current token usage based on message history."""
+        litellm = _get_litellm()  # Lazy load and cache
         return litellm.token_counter(model=self.llm_kwargs["model"], messages=self.messages)
         
     def run(self, task: str, repo_root: Optional[str|Path] = None) -> str:
@@ -163,6 +175,8 @@ class Agent:
         return unified_diff
 
     def _chat(self) -> dict:
+        litellm = _get_litellm()  # Lazy load and cache
+        
         reply = litellm.completion(
             **self.llm_kwargs,
             max_tokens=min(self.response_limit, self.remaining_tokens),
