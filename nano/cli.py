@@ -9,8 +9,10 @@ def _parse() -> argparse.Namespace:
     p.add_argument("--path", default=".", type=Path, help="Repo root (defaults to current directory)")
     p.add_argument("--model", default="openai/gpt-4.1-mini", help="Model identifier in LiteLLM format")
     p.add_argument("--api_base", help="Base URL for API endpoint, useful for local servers")
-    p.add_argument("--token_limit", type=int, default=8192, help="Size of the context window in tokens")
-    p.add_argument("--tool_limit", type=int, default=20, help="Maximum number of tool calls the agent can make before stopping")
+    p.add_argument("--create_tool", action="store_true", help="Enable file creation tool")
+    p.add_argument("--deepwiki_tool", action="store_true", help="Enable DeepWiki tool")
+    p.add_argument("--token_limit", type=int, default=32768, help="Size of the context window in tokens")
+    p.add_argument("--tool_limit", type=int, default=50, help="Maximum number of tool calls the agent can make before stopping")
     p.add_argument("--response_limit", type=int, default=4096, help="Maximum tokens per completion response")
     p.add_argument("--thinking", action="store_true", help="Emit <think> … </think> blocks (requires compatible models)")
     p.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature, higher means more random")
@@ -27,6 +29,8 @@ def main():
     agent = Agent(
         model=args.model,
         api_base=args.api_base,
+        create_tool=args.create_tool,
+        deepwiki_tool=args.deepwiki_tool,
         token_limit=args.token_limit,
         tool_limit=args.tool_limit,
         response_limit=args.response_limit,

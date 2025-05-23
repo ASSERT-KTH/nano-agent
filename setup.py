@@ -11,6 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "litellm>=1.68.0",
+        "requests>=2.32.3",
     ],
     entry_points={
         "console_scripts": [

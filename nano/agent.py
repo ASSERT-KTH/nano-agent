@@ -1,50 +1,38 @@
 import uuid
 import json
 from pathlib import Path
+from typing import Optional
 from datetime import datetime
 
 import litellm
 # litellm._turn_on_debug()
 
 from nano.git import is_git_repo, is_clean, git_diff
-from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
+from nano.tools import (
+    shell, apply_patch, create, deepwiki,
+    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL, DEEPWIKI_TOOL,
+    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES, DEEPWIKI_GUIDELINES
+)
 
 
-SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously in a read-only terminal. Your goal is to deeply understand issues, explore code efficiently with shell, apply precise patches with apply_patch, and conclude with clear summarization.
+SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously.
 
-**Constraints:**
-* **System Messages:** Important feedback from the system appears in `[...]` brackets before terminal outputs - follow these messages carefully.
-* **Tool Call Limit:** You have a limited number of tool calls. The system will warn you when you're running out.
-* **Token Limit:** You have a limited number of tokens. The system will warn you when you're running out.
-* **Task Completion:** Make sure to always attempt to complete your tasks before running out of tool calls.
-* **Plan Before Acting:** Think through and outline your approach before using tools to minimize unnecessary calls.
+Your identity: Autonomous problem-solver who gathers comprehensive context before acting, completing tasks independently within resource limits.
 
-**Available Tools:**
-1.  `shell`: Read-only commands (`ls`, `cat`, `rg`, etc.) for exploring code. Cannot modify files. Cwd persists.
-2.  `apply_patch`: Apply a *single*, precise SEARCH/REPLACE to a file.
+Your approach:
+1. Analyze - Understand the issue completely
+2. Explore - Gather comprehensive context before acting
+3. Plan - Design minimal tool usage strategy  
+4. Execute - Apply precise changes efficiently
+5. Summarize - Report results and stop
 
-**Workflow & Planning:**
-1.  **Plan:** Outline and refine your approach before using tools.
-2.  **Understand:** Analyze the user's issue description. Analyze the user's issue description.
-2.  **Explore:** Use `shell` efficiently to locate relevant code. Conserve calls.
-3.  **Identify Fix:** Determine precise changes needed. Plan patch sequence if multiple are required.
-4.  **Submit Patch(es):** Use `apply_patch` for each required modification.
-5.  **Summarize & Finish:** Once all patches are applied and the fix is complete, **stop using tools**. Provide a concise, final summary message describing the changes made.
+System rules:
+- Tool/token limits exist (heed [...] warnings)
+- Never request user input
+- Always attempt task completion
+- Insufficient context leads to failure - explore thoroughly
 
-**Important Guidelines:**
-* **System/Tool Feedback:** Messages in `[...]` are direct output from the system or tools.
-* **Tool Roles:** Use `shell` for exploration *only*. Use `apply_patch` for modifications *only*.
-* **No User Feedback:** Operate autonomously. Do not ask clarifying questions or solicit feedback from the user.
-* **Shell Usage Best Practices:**
-    * Terminal outputs are truncated at 1024 characters. Avoid commands like `cat` on large files.
-    * Prioritize concise, targeted commands such as `grep` or `ripgrep (rg)` to find relevant information quickly.
-    * Use commands like `sed`, `head`, or `tail` for incremental reading or extracting specific sections of large files.
-* **Patching Best Practices:**
-    * Keep patches **small and localized**. Break larger fixes into multiple `apply_patch` calls.
-    * The `search` string must be *exact* (including whitespace) and *unique* in the file.
-    * The `replace` string must have the **correct indentation** for its context.
-    * Failed patches (bad search, bad format) still consume a tool call. Be precise.
-* **Task Completion:** Always attempt to solve your task before running out of time.
+{guidelines}
 """
 
 class Agent:
@@ -56,7 +44,9 @@ class Agent:
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
-            api_base: str|None = None,
+            api_base: Optional[str] = None,
+            create_tool: bool = False,
+            deepwiki_tool: bool = False,
             token_limit: int = 8192,
             response_limit: int = 4096,
             tool_limit: int = 20,
@@ -73,6 +63,8 @@ class Agent:
         Args:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
+            create_tool (bool): If True, then the agent can create files
+            deepwiki_tool (bool): If True, then the agent can query the DeepWiki MCP
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
             response_limit (int): Maximum tokens per completion response
@@ -90,7 +82,17 @@ class Agent:
         self.verbose = verbose
         self.log = log
         
+        self.create_tool, self.deepwiki_tool = create_tool, deepwiki_tool
         self.tools = [SHELL_TOOL, PATCH_TOOL]
+        self.guidelines = [SHELL_GUIDELINES, PATCH_GUIDELINES]
+
+        if self.create_tool:
+            self.tools.append(CREATE_TOOL)
+            self.guidelines.append(CREATE_GUIDELINES)
+
+        if self.deepwiki_tool:
+            self.tools.append(DEEPWIKI_TOOL)
+            self.guidelines.append(DEEPWIKI_GUIDELINES)
         
         self.llm_kwargs = dict(
             model=model,
@@ -108,7 +110,7 @@ class Agent:
         """Return the current token usage based on message history."""
         return litellm.token_counter(model=self.llm_kwargs["model"], messages=self.messages)
         
-    def run(self, task: str, repo_root: str|Path|None = None) -> str:
+    def run(self, task: str, repo_root: Optional[str|Path] = None) -> str:
         """
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
@@ -138,12 +140,16 @@ class Agent:
                 args = json.loads(call["function"]["arguments"])
 
                 if name == "shell":
-                    if self.verbose: print(f"shell({args['cmd']})" if "cmd" in args else "invalid shell call")
-                    success, output = shell(args=args, repo_root=repo_root)
+                    success, output = shell(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 elif name == "apply_patch":
-                    if self.verbose: print(f"apply_patch(..., ..., {args['file']})" if "file" in args else "invalid apply_patch call")
-                    success, output = apply_patch(args=args, repo_root=repo_root)
+                    success, output = apply_patch(args=args, repo_root=repo_root, verbose=self.verbose)
+
+                elif name == "create":
+                    success, output = create(args=args, repo_root=repo_root, verbose=self.verbose)
+
+                elif name == "deepwiki":
+                    success, output = deepwiki(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 else:
                     success, output = False, f"[unknown tool: {name}]"
@@ -222,8 +228,8 @@ class Agent:
             "  ██████ \n"
             " ████████      Nano v{version}\n"
             " █▒▒▒▒▒▒█      Model: {model} {endpoint_info}\n"
-            " █▒█▒▒█▒█      Token limit: {token_limit}\n"
-            " ████████      Tool limit: {tool_limit}\n"
+            " █▒█▒▒█▒█      Token limit: {token_limit}, Tool limit: {tool_limit}\n"
+            " ████████      Available tools: {tools}\n"
             "  ██████  \n"
             "\n"
         )
@@ -233,11 +239,12 @@ class Agent:
             model=self.llm_kwargs['model'],
             endpoint_info=f"on: {self.llm_kwargs['api_base']}" if self.llm_kwargs['api_base'] else "",
             token_limit=self.token_limit,
-            tool_limit=self.tool_limit
+            tool_limit=self.tool_limit,
+            tools=", ".join([t["function"]["name"] for t in self.tools])
         ))
         
     def _reset(self):
-        self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self.messages = [{"role": "system", "content": SYSTEM_PROMPT.format(guidelines="\n".join(self.guidelines))}]
         
         self.remaining_tool_calls = self.tool_limit
         self.remaining_tokens = self.token_limit  # will include the messages after the first _chat
