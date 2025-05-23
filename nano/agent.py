@@ -10,9 +10,9 @@ from datetime import datetime
 
 from nano.git import is_git_repo, is_clean, git_diff
 from nano.tools import (
-    shell, apply_patch, create,
-    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL,
-    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES,
+    shell, apply_patch, create, deepwiki,
+    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL, DEEPWIKI_TOOL,
+    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES, DEEPWIKI_GUIDELINES,
 )
 
 # litellm is very slow to import, so we lazy load it
@@ -75,6 +75,7 @@ class Agent:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
             create_tool (bool): If True, then the agent can create files
+            deepwiki_tool (bool): If True, then the agent can query the DeepWiki MCP
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
             response_limit (int): Maximum tokens per completion response
