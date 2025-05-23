@@ -12,7 +12,7 @@ setup(
     install_requires=[
         "litellm>=1.68.0",
         "requests>=2.32.3",
-        # "mcp[cli]" # for deepwiki when we want it
+        "mcp[cli]" # for deepwiki when we want it
     ],
     entry_points={
         "console_scripts": [
