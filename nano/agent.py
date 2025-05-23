@@ -160,6 +160,9 @@ class Agent:
                 elif name == "create":
                     success, output = create(args=args, repo_root=repo_root, verbose=self.verbose)
 
+                elif name == "deepwiki":
+                    success, output = deepwiki(args=args, verbose=self.verbose)
+
                 else:
                     success, output = False, f"[unknown tool: {name}]"
             
