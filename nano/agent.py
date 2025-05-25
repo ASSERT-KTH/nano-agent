@@ -121,9 +121,14 @@ class Agent:
 
     @property
     def token_usage(self):
-        """Return the current token usage based on message history."""
+        """Return the total token count of the conversation (may exceed token_limit)."""
         litellm = _get_litellm()  # Lazy load and cache
         return litellm.token_counter(model=self.llm_kwargs["model"], messages=self.messages)
+    
+    @property
+    def tool_usage(self):
+        """Return the number of tool calls made."""
+        return self.tool_limit - getattr(self, "remaining_tool_calls", self.tool_limit)
         
     def run(self, task: str, repo_root: Optional[str|Path] = None) -> str:
         """
@@ -147,7 +152,7 @@ class Agent:
             if not msg.get("tool_calls"):
                 break  # No tool calls requested, agent is either done or misunderstanding the task.
 
-            for call in msg["tool_calls"]:
+            for call in msg["tool_calls"]:  
                 name = call["function"]["name"]
                 args = json.loads(call["function"]["arguments"])
 

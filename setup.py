@@ -14,6 +14,11 @@ setup(
         "requests>=2.32.3",
         "mcp[cli]" # for deepwiki when we want it
     ],
+    extras_require={
+        "test": [
+            "GitPython>=3.1.0",  # For SWE-Bench testing
+        ]
+    },
     entry_points={
         "console_scripts": [
             "nano_agent=nano.cli:main",  # we shouldn't overload "nano"
