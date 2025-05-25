@@ -1,0 +1,815 @@
+{
+  "name": "nano_2.0.0_22369a2d_lite_Qwen3-32B",
+  "created_at": 1748193275.7964866,
+  "metrics": {
+    "success_rate": 0.3375,
+    "success_std": 0.37291084725440743,
+    "avg_similarity": 0.23400352674412409,
+    "similarity_std": 0.21541613452679093,
+    "avg_tokens": 2685.6035714285713,
+    "tokens_std": 616.2587967777896,
+    "avg_tools": 15.155714285714286,
+    "tools_std": 3.832019961342449,
+    "timestamp": 1748193275.7922652,
+    "git_commit": "3094624baae5cfafb3a2da8706ebe86b1edc9b2e",
+    "nano_version": "2.0.0",
+    "total_problems": 10,
+    "total_runs": 80,
+    "avg_repetitions": 8,
+    "global_run_based": {
+      "success_rate": 0.3375,
+      "success_std": 0.47584036255125667,
+      "avg_similarity": 0.23400352674412409,
+      "similarity_std": 0.27801274190625536,
+      "avg_tokens": 2645.08,
+      "tokens_std": 1137.8049844778773,
+      "avg_tools": 14.710144927536232,
+      "tools_std": 10.649636073974495
+    },
+    "global_problem_based": {
+      "success_rate": 0.3375,
+      "success_std": 0.37291084725440743,
+      "avg_similarity": 0.23400352674412409,
+      "similarity_std": 0.21541613452679093,
+      "avg_tokens": 2685.6035714285713,
+      "tokens_std": 616.2587967777896,
+      "avg_tools": 15.155714285714286,
+      "tools_std": 3.832019961342449
+    },
+    "per_problem_stats": {
+      "django__django-16139": {
+        "repetitions": 8,
+        "success_rate": 0.25,
+        "success_std": 0.4629100498862757,
+        "avg_similarity": 0.18518518518518517,
+        "similarity_std": 0.34289633324909313,
+        "avg_tokens": 1703.75,
+        "tokens_std": 784.5649841062972,
+        "avg_tools": 9.375,
+        "tools_std": 12.83897525950906
+      },
+      "sympy__sympy-13773": {
+        "repetitions": 8,
+        "success_rate": 0.625,
+        "success_std": 0.5175491695067657,
+        "avg_similarity": 0.34322508398656215,
+        "similarity_std": 0.23483839312493268,
+        "avg_tokens": 2964.625,
+        "tokens_std": 1199.6932866957525,
+        "avg_tools": 13.75,
+        "tools_std": 6.943650748294136
+      },
+      "django__django-12497": {
+        "repetitions": 8,
+        "success_rate": 0.125,
+        "success_std": 0.3535533905932738,
+        "avg_similarity": 0.11046511627906977,
+        "similarity_std": 0.31244253122196286,
+        "avg_tokens": 3450,
+        "tokens_std": 1563.6222369869265,
+        "avg_tools": 17.2,
+        "tools_std": 15.658863304850707
+      },
+      "sympy__sympy-15308": {
+        "repetitions": 8,
+        "success_rate": 0.125,
+        "success_std": 0.3535533905932738,
+        "avg_similarity": 0.1672470614491891,
+        "similarity_std": 0.14406195783252843,
+        "avg_tokens": 3012.375,
+        "tokens_std": 968.5951443051057,
+        "avg_tools": 17.125,
+        "tools_std": 12.123619214456665
+      },
+      "scikit-learn__scikit-learn-13439": {
+        "repetitions": 8,
+        "success_rate": 1.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.5043103448275862,
+        "similarity_std": 0.05088629946152039,
+        "avg_tokens": 2391.25,
+        "tokens_std": 758.2562231858042,
+        "avg_tools": 12,
+        "tools_std": 5.451081150953975
+      },
+      "matplotlib__matplotlib-18869": {
+        "repetitions": 8,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.10734682480628917,
+        "similarity_std": 0.07173827663553294,
+        "avg_tokens": 3188.5,
+        "tokens_std": 1116.004736293073,
+        "avg_tools": 20.75,
+        "tools_std": 13.155661464610153
+      },
+      "sphinx-doc__sphinx-8713": {
+        "repetitions": 8,
+        "success_rate": 0.875,
+        "success_std": 0.3535533905932738,
+        "avg_similarity": 0.6810924369747899,
+        "similarity_std": 0.2774916650623644,
+        "avg_tokens": 2196.625,
+        "tokens_std": 573.3119164742947,
+        "avg_tools": 10.5,
+        "tools_std": 7.091242083423347
+      },
+      "scikit-learn__scikit-learn-25638": {
+        "repetitions": 8,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.03654782931718463,
+        "similarity_std": 0.04327877640339301,
+        "avg_tokens": 2836.4285714285716,
+        "tokens_std": 871.4338485398374,
+        "avg_tools": 13.714285714285714,
+        "tools_std": 6.993193970194299
+      },
+      "pydata__xarray-4248": {
+        "repetitions": 8,
+        "success_rate": 0.375,
+        "success_std": 0.5175491695067657,
+        "avg_similarity": 0.20461538461538462,
+        "similarity_std": 0.13143077656277918,
+        "avg_tokens": 3280.8571428571427,
+        "tokens_std": 976.5412482449523,
+        "avg_tools": 18.142857142857142,
+        "tools_std": 10.302565561201595
+      },
+      "pytest-dev__pytest-5495": {
+        "repetitions": 8,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.0,
+        "similarity_std": 0.0,
+        "avg_tokens": 1831.625,
+        "tokens_std": 1447.031832752825,
+        "avg_tools": 19,
+        "tools_std": 24.041630560342615
+      }
+    }
+  },
+  "results": [
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1230,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 4,
+      "success": true,
+      "similarity": 0.7407407407407407,
+      "token_usage": 1549,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1421,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1425,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 6,
+      "success": true,
+      "similarity": 0.7407407407407407,
+      "token_usage": 1304,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1335,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1764,
+      "tool_usage": 7
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.47368421052631576,
+      "token_usage": 2082,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 2295,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.47368421052631576,
+      "token_usage": 1850,
+      "tool_usage": 10
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 4,
+      "success": true,
+      "similarity": 0.6382978723404256,
+      "token_usage": 2770,
+      "tool_usage": 15
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.47368421052631576,
+      "token_usage": 3104,
+      "tool_usage": 19
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.47368421052631576,
+      "token_usage": 3253,
+      "tool_usage": 21
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.1276595744680851,
+      "token_usage": 2681,
+      "tool_usage": 12
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3602,
+      "tool_usage": 41
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0851063829787234,
+      "token_usage": 5682,
+      "tool_usage": 23
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 2202,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 2024,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3505,
+      "tool_usage": 7
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.8837209302325582,
+      "token_usage": 3164,
+      "tool_usage": 15
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 0,
+      "tool_usage": 0,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: Hosted_vllmException - This model's maximum context length is 10000 tokens. However, you requested 10047 tokens (5951 in the messages, 4096 in the completion). Please reduce the length of the messages or completion."
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 0,
+      "tool_usage": 0,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: Hosted_vllmException - This model's maximum context length is 10000 tokens. However, you requested 10005 tokens (5909 in the messages, 4096 in the completion). Please reduce the length of the messages or completion."
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.2564102564102564,
+      "token_usage": 4459,
+      "tool_usage": 32
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1850,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 4001,
+      "tool_usage": 23
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.22727272727272727,
+      "token_usage": 2895,
+      "tool_usage": 24
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 5859,
+      "tool_usage": 41
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 0,
+      "tool_usage": 0,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: Hosted_vllmException - This model's maximum context length is 10000 tokens. However, you requested 10183 tokens (6087 in the messages, 4096 in the completion). Please reduce the length of the messages or completion."
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3554,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.4827586206896552,
+      "token_usage": 1622,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.358974358974359,
+      "token_usage": 2448,
+      "tool_usage": 24
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.2553191489361702,
+      "token_usage": 1681,
+      "tool_usage": 9
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.4827586206896552,
+      "token_usage": 1520,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.4827586206896552,
+      "token_usage": 2151,
+      "tool_usage": 11
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.6206896551724138,
+      "token_usage": 3418,
+      "tool_usage": 15
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 5,
+      "success": true,
+      "similarity": 0.4827586206896552,
+      "token_usage": 1765,
+      "tool_usage": 9
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 6,
+      "success": true,
+      "similarity": 0.4827586206896552,
+      "token_usage": 2466,
+      "tool_usage": 11
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.24,
+      "token_usage": 3707,
+      "tool_usage": 32
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 7,
+      "success": true,
+      "similarity": 0.5333333333333333,
+      "token_usage": 2797,
+      "tool_usage": 16
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.14736842105263157,
+      "token_usage": 3134,
+      "tool_usage": 14
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.10526315789473684,
+      "token_usage": 2128,
+      "tool_usage": 10
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 4,
+      "success": true,
+      "similarity": 0.4666666666666667,
+      "token_usage": 3391,
+      "tool_usage": 22
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.10526315789473684,
+      "token_usage": 1577,
+      "tool_usage": 8
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3407,
+      "tool_usage": 21
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.7428571428571429,
+      "token_usage": 1597,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.7058823529411765,
+      "token_usage": 1691,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.8,
+      "token_usage": 2441,
+      "tool_usage": 14
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 4575,
+      "tool_usage": 41
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.14583333333333334,
+      "token_usage": 3769,
+      "tool_usage": 18
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 2441,
+      "tool_usage": 12
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.18181818181818182,
+      "token_usage": 2332,
+      "tool_usage": 13
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 6,
+      "success": true,
+      "similarity": 0.8,
+      "token_usage": 1816,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 7,
+      "success": true,
+      "similarity": 0.8,
+      "token_usage": 1810,
+      "tool_usage": 5
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 5,
+      "success": true,
+      "similarity": 0.8,
+      "token_usage": 2492,
+      "tool_usage": 13
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3115,
+      "tool_usage": 10
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.046511627906976744,
+      "token_usage": 2920,
+      "tool_usage": 16
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1721,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 4,
+      "success": true,
+      "similarity": 0.8,
+      "token_usage": 3285,
+      "tool_usage": 25
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1728,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.05063291139240506,
+      "token_usage": 4186,
+      "tool_usage": 23
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.09523809523809523,
+      "token_usage": 2940,
+      "tool_usage": 13
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.1,
+      "token_usage": 3245,
+      "tool_usage": 22
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.1732283464566929,
+      "token_usage": 4586,
+      "tool_usage": 41
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.23076923076923078,
+      "token_usage": 2242,
+      "tool_usage": 11
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.23076923076923078,
+      "token_usage": 4138,
+      "tool_usage": 17
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.24,
+      "token_usage": 2292,
+      "tool_usage": 13
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 0,
+      "tool_usage": 0,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: Hosted_vllmException - This model's maximum context length is 10000 tokens. However, you requested 10262 tokens (6166 in the messages, 4096 in the completion). Please reduce the length of the messages or completion."
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.3076923076923077,
+      "token_usage": 3582,
+      "tool_usage": 16
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 7,
+      "success": true,
+      "similarity": 0.32,
+      "token_usage": 2506,
+      "tool_usage": 13
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 5,
+      "success": true,
+      "similarity": 0.3076923076923077,
+      "token_usage": 3437,
+      "tool_usage": 16
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1014,
+      "tool_usage": 0
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 5,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1344,
+      "tool_usage": 2
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1157,
+      "tool_usage": 0
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 0,
+      "tool_usage": 0,
+      "error": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: Hosted_vllmException - This model's maximum context length is 10000 tokens. However, you requested 10042 tokens (5946 in the messages, 4096 in the completion). Please reduce the length of the messages or completion."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 1127,
+      "tool_usage": 0
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 925,
+      "tool_usage": 0
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 7,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 827,
+      "tool_usage": 0
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 6,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 4769,
+      "tool_usage": 41
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 4,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 3678,
+      "tool_usage": 36
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "token_usage": 4581,
+      "tool_usage": 0
+    }
+  ],
+  "config": {
+    "nano_version": "2.0.0",
+    "git_commit": "3094624baae5cfafb3a2da8706ebe86b1edc9b2e",
+    "test_set": "lite",
+    "repetitions": 8,
+    "max_workers": 8,
+    "model": "hosted_vllm/Qwen/Qwen3-32B",
+    "api_base": "http://localhost:8000/v1",
+    "token_limit": 16384,
+    "tool_limit": 40,
+    "thinking": true,
+    "temperature": 0.6,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.05
+  }
+}

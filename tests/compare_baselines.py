@@ -6,8 +6,8 @@ from swe_bench import load_baseline, compare_baselines
 
 def main():
     parser = argparse.ArgumentParser(description="Compare two SWE-Bench baselines")
-    parser.add_argument("--baseline1", default="nano_1.1.0_70e60379_lite", help="First baseline to compare (default: nano_1.1.0_70e60379_lite)")
-    parser.add_argument("--baseline2", default="nano_2.0.0_d79af850_lite", help="Second baseline to compare (default: nano_2.0.0_d79af850_lite)")
+    parser.add_argument("baseline1", nargs='?', default="nano_1.1.0_70e60379_lite_gpt-4.1-mini", help="First baseline to compare (default: nano_1.1.0_70e60379_lite_gpt-4.1-mini)")
+    parser.add_argument("baseline2", nargs='?', default="nano_2.0.0_d79af850_lite_gpt-4.1-mini", help="Second baseline to compare (default: nano_2.0.0_d79af850_lite_gpt-4.1-mini)")
     
     args = parser.parse_args()
     

@@ -2,6 +2,7 @@ import uuid
 import json
 import time
 import logging
+import requests
 from pathlib import Path
 from typing import Dict, List, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -48,7 +49,7 @@ def run_single_problem(problem: Dict[str, Any], agent_config: Dict[str, Any], re
             "success": success,
             "similarity": similarity,
             "token_usage": agent.token_usage,
-            "tool_usage": agent.tool_usage,
+            "tool_usage": agent.tool_limit - agent.remaining_tool_calls, #agent.tool_usage,
         }
         
     except Exception as e:
@@ -211,8 +212,14 @@ def build_config_snapshot(agent_config: Dict, test_set: str, repetitions: int, m
         
         # Agent configuration
         "model": agent_config["model"],
+        "api_base": agent_config["api_base"],
         "token_limit": agent_config["token_limit"],
         "tool_limit": agent_config["tool_limit"],
+        "thinking": agent_config["thinking"],
+        "temperature": agent_config["temperature"],
+        "top_k": agent_config["top_k"],
+        "top_p": agent_config["top_p"],
+        "min_p": agent_config["min_p"],
     }
 
 def save_baseline(name: str, results: List[Dict], metrics: Dict, config_snapshot: Dict):
@@ -252,7 +259,7 @@ def compare_baselines(current: Dict, baseline: Dict, current_config: Dict = None
     if current_config and baseline_config:
         print(f"\n  ⚙️  Configuration changes:")
         
-        config_params = ["nano_version", "git_commit", "model", "test_set", "repetitions", "token_limit", "tool_limit", "max_workers"]
+        config_params = ["nano_version", "git_commit", "model", "test_set", "repetitions", "token_limit", "tool_limit", "max_workers", "api_base", "temperature", "top_k", "top_p", "min_p"]
         
         for param in config_params:
             base_val = baseline_config.get(param, "missing")
@@ -352,16 +359,18 @@ def compare_baselines(current: Dict, baseline: Dict, current_config: Dict = None
             print(f"       Biggest reduction: {biggest_token_reduction['problem_id']} ({biggest_token_reduction['token_diff']:+.0f})")
             print(f"       Biggest increase: {biggest_token_increase['problem_id']} ({biggest_token_increase['token_diff']:+.0f})")
 
-def generate_baseline_name(test_set: str) -> str:
-    """Generate a baseline name."""
+def generate_baseline_name(test_set: str, model: str) -> str:
+    """Generate a baseline name including model info."""
+    # Extract the last part of the model name (e.g., "gpt-4.1-mini" from "openrouter/openai/gpt-4.1-mini")
+    model_suffix = model.split("/")[-1]
     id = str(uuid.uuid4())[:8]
-    return f"nano_{__version__}_{id}_{test_set}"
+    return f"nano_{__version__}_{id}_{test_set}_{model_suffix}"
 
 def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Test Nano on SWE-Bench problems")
-    parser.add_argument("--model", default="openrouter/openai/gpt-4.1-mini", help="Model to test")
+    parser.add_argument("--model", default=None, help="Model to test (if None, uses localhost)")
     parser.add_argument("--verified", action="store_true", help="Use verified (harder) test set")
     parser.add_argument("--quick", action="store_true", help="Run only 3 problems")
     parser.add_argument("--baseline", action="store_true", help="Save results as a new baseline")
@@ -374,6 +383,17 @@ def main():
     
     args = parser.parse_args()
     
+    # Handle nullable model - default to localhost setup
+    if args.model is None:
+        # Auto-detect model from local vLLM server
+        api_base = "http://localhost:8000/v1"
+        model = requests.get(f"{api_base}/models").json()["data"][0]["id"]
+        print(f"🏠 No model specified, queried localhost and using {model}")
+        model = f"hosted_vllm/{model}"
+    else:
+        model = args.model
+        api_base = "missing"
+    
     # Load test data
     test_set = "verified" if args.verified else "lite"
     test_file = TEST_DATA_DIR / f"swe_bench_{test_set}_subset.json"
@@ -383,16 +403,22 @@ def main():
         problems = problems[:3]
     
     print(f"🧪 Testing Nano on {len(problems)} SWE-Bench {test_set} problems")
-    print(f"Model: {args.model}")
+    print(f"Model: {model}")
     print(f"Max workers: {args.max_workers}")
     print(f"Repetitions: {args.repetitions}")
     
     # Agent configuration
     agent_config = {
-        "model": args.model,
+        "model": model,
+        "api_base": api_base,
         "token_limit": args.token_limit,
         "tool_limit": args.tool_limit,
         "verbose": args.verbose,
+        "thinking": True,
+        "temperature": 0.6,   
+        "top_k": 20,
+        "top_p": 0.95,
+        # "min_p": 0.05
         # temp / top_k etc.
     }
     
@@ -432,7 +458,7 @@ def main():
     
     # Handle baseline operations
     if args.baseline:
-        auto_name = generate_baseline_name(test_set)
+        auto_name = generate_baseline_name(test_set, model)
         config_snapshot = build_config_snapshot(agent_config, test_set, args.repetitions, args.max_workers)
         save_baseline(auto_name, results, metrics, config_snapshot)
         print(f"💾 Auto-saved as baseline: {auto_name}")
