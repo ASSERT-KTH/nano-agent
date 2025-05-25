@@ -393,7 +393,7 @@ def main():
         "token_limit": args.token_limit,
         "tool_limit": args.tool_limit,
         "verbose": args.verbose,
-        "log": False,  # Disable internal logging for cleaner output
+        # temp / top_k etc.
     }
     
     # Load baseline early to catch errors before running tests
