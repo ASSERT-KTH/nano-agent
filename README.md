@@ -2,7 +2,7 @@
   <img src="nano.svg"/>
 </p>
 
-# Nano
+# Nano <div style="float: right;">[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ASSERT-KTH/nano-agent)</div>
 
 *A minimal coding‑agent for:*
 
@@ -122,6 +122,7 @@ This lets you train models that learn to use tools directly, grounded in interac
 This approach acknowledges that the agent may initially fail in certain situations; however, these failures are valuable learning opportunities. We can then directly reinforce favorable behaviors and successful outcomes using outcome supervision, progressively refining the agent's strategies.
 
 ---
+
 
 ## Citation
 
