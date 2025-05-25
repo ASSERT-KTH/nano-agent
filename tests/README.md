@@ -50,7 +50,7 @@ python tests/swe_bench.py --verified
 python tests/swe_bench.py --quick
 
 # Run with multiple repetitions and custom settings
-python tests/swe_bench.py --repetitions 3 --max-workers 4 --model "openrouter/openai/gpt-4o"
+python tests/swe_bench.py --repetitions 3 --max-workers 4 --model "openrouter/openai/gpt-4.1"
 
 # Save results as a new baseline (for future comparisons)
 python tests/swe_bench.py --baseline
