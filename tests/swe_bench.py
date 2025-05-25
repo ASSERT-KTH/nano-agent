@@ -240,14 +240,12 @@ def load_baseline(name: str) -> Dict:
 
 def compare_baselines(current: Dict, baseline: Dict, current_config: Dict = None):
     """Compare current metrics to baseline."""
-    baseline_name = baseline.get('name', 'unknown')
-    print(f"\n📊 Comparison to baseline '{baseline_name}':")
     
     current_m = current
     baseline_m = baseline["metrics"]
     
-    print(f"  Current: {current_m.get('total_problems', '?')} problems, {current_m.get('avg_repetitions', 1):.1f} avg reps")
-    print(f"  Baseline: {baseline_m.get('total_problems', '?')} problems, {baseline_m.get('avg_repetitions', 1):.1f} avg reps")
+    print(f"  First:  {baseline_m.get('total_problems', '?')} problems, {baseline_m.get('avg_repetitions', 1):.1f} avg reps")
+    print(f"  Second: {current_m.get('total_problems', '?')} problems, {current_m.get('avg_repetitions', 1):.1f} avg reps")
     
     # Compare configurations
     baseline_config = baseline.get("config") or baseline.get("agent_config")
@@ -257,31 +255,25 @@ def compare_baselines(current: Dict, baseline: Dict, current_config: Dict = None
         config_params = ["nano_version", "git_commit", "model", "test_set", "repetitions", "token_limit", "tool_limit", "max_workers"]
         
         for param in config_params:
-            curr_val = current_config.get(param, "missing")
             base_val = baseline_config.get(param, "missing")
+            curr_val = current_config.get(param, "missing")
             
             if curr_val != base_val:
                 # Show short git hash
                 if param == "git_commit":
-                    curr_val = str(curr_val)[:8] if curr_val != "missing" else curr_val
                     base_val = str(base_val)[:8] if base_val != "missing" else base_val
+                    curr_val = str(curr_val)[:8] if curr_val != "missing" else curr_val
                 
-                print(f"    {param:12}: {curr_val} (was {base_val})")
+                print(f"    {param:12}: {base_val} → {curr_val}")
     
     # Show metrics comparison
     print(f"\n  📈 Metrics:")
     has_std = "success_std" in current_m
     
     for metric in ["success_rate", "avg_similarity", "avg_tokens", "avg_tools"]:
-        curr_val = current_m[metric]
         base_val = baseline_m[metric]
+        curr_val = current_m[metric]
         diff = curr_val - base_val
-        
-        if has_std:
-            curr_std = current_m.get(f"{metric.replace('avg_', '')}_std", 0)
-            curr_str = f"{curr_val:.3f}±{curr_std:.3f}"
-        else:
-            curr_str = f"{curr_val:.3f}"
         
         base_std = baseline_m.get(f"{metric.replace('avg_', '')}_std", 0)
         if base_std > 0:
@@ -289,7 +281,76 @@ def compare_baselines(current: Dict, baseline: Dict, current_config: Dict = None
         else:
             base_str = f"{base_val:.3f}"
         
-        print(f"    {metric:15}: {curr_str} vs {base_str} ({diff:+.3f})")
+        if has_std:
+            curr_std = current_m.get(f"{metric.replace('avg_', '')}_std", 0)
+            curr_str = f"{curr_val:.3f}±{curr_std:.3f}"
+        else:
+            curr_str = f"{curr_val:.3f}"
+        
+        print(f"    {metric:15}: {base_str} → {curr_str} ({diff:+.3f})")
+    
+    # Per-problem analysis
+    baseline_problems = baseline_m.get("per_problem_stats", {})
+    current_problems = current_m.get("per_problem_stats", {})
+    
+    if baseline_problems and current_problems:
+        print(f"\n  🔍 Per-problem analysis:")
+        
+        differences = []
+        for problem_id in baseline_problems.keys():
+            if problem_id in current_problems:
+                p1 = baseline_problems[problem_id]
+                p2 = current_problems[problem_id]
+                
+                success_diff = p2["success_rate"] - p1["success_rate"]
+                similarity_diff = p2["avg_similarity"] - p1["avg_similarity"]
+                token_diff = p2["avg_tokens"] - p1["avg_tokens"]
+                tool_diff = p2["avg_tools"] - p1["avg_tools"]
+                
+                differences.append({
+                    "problem_id": problem_id,
+                    "success_diff": success_diff,
+                    "similarity_diff": similarity_diff,
+                    "token_diff": token_diff,
+                    "tool_diff": tool_diff,
+                    "p1": p1,
+                    "p2": p2
+                })
+        
+        if differences:
+            # Sort by biggest success rate change (absolute)
+            differences.sort(key=lambda x: abs(x["success_diff"]), reverse=True)
+            
+            # Show top 3 biggest changes
+            print(f"    Top changes by success rate:")
+            for i, diff in enumerate(differences[:3], 1):
+                problem_id = diff["problem_id"]
+                p1, p2 = diff["p1"], diff["p2"]
+                
+                print(f"    {i}. {problem_id}")
+                print(f"       Success: {p1['success_rate']:.3f} → {p2['success_rate']:.3f} ({diff['success_diff']:+.3f})")
+                print(f"       Similarity: {p1['avg_similarity']:.3f} → {p2['avg_similarity']:.3f} ({diff['similarity_diff']:+.3f})")
+                print(f"       Tokens: {p1['avg_tokens']:.0f} → {p2['avg_tokens']:.0f} ({diff['token_diff']:+.0f})")
+            
+            # Find biggest improvements and regressions
+            biggest_improvement = max(differences, key=lambda x: x["success_diff"])
+            biggest_regression = min(differences, key=lambda x: x["success_diff"])
+            
+            if biggest_improvement["success_diff"] > 0:
+                print(f"\n    📈 Biggest improvement: {biggest_improvement['problem_id']}")
+                print(f"       Success: {biggest_improvement['p1']['success_rate']:.3f} → {biggest_improvement['p2']['success_rate']:.3f} (+{biggest_improvement['success_diff']:.3f})")
+            
+            if biggest_regression["success_diff"] < 0:
+                print(f"\n    📉 Biggest regression: {biggest_regression['problem_id']}")
+                print(f"       Success: {biggest_regression['p1']['success_rate']:.3f} → {biggest_regression['p2']['success_rate']:.3f} ({biggest_regression['success_diff']:.3f})")
+            
+            # Token usage extremes
+            biggest_token_reduction = min(differences, key=lambda x: x["token_diff"])
+            biggest_token_increase = max(differences, key=lambda x: x["token_diff"])
+            
+            print(f"\n    💰 Token usage:")
+            print(f"       Biggest reduction: {biggest_token_reduction['problem_id']} ({biggest_token_reduction['token_diff']:+.0f})")
+            print(f"       Biggest increase: {biggest_token_increase['problem_id']} ({biggest_token_increase['token_diff']:+.0f})")
 
 def generate_baseline_name(test_set: str) -> str:
     """Generate a baseline name."""
@@ -378,6 +439,7 @@ def main():
     
     if baseline:
         config_snapshot = build_config_snapshot(agent_config, test_set, args.repetitions, args.max_workers)
+        print(f"\n📊 Comparison to baseline {baseline.get('name')}:")
         compare_baselines(metrics, baseline, config_snapshot)
 
 if __name__ == "__main__":
