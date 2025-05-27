@@ -55,15 +55,15 @@ def build_config_snapshot(agent_config: dict, test_set: str, repetitions: int, m
         "max_workers": max_workers,
         
         # Agent configuration
-        "model": agent_config["model"],
-        "api_base": agent_config["api_base"],
-        "token_limit": agent_config["token_limit"],
-        "tool_limit": agent_config["tool_limit"],
-        "thinking": agent_config["thinking"],
-        "temperature": agent_config["temperature"],
-        "top_k": agent_config["top_k"],
-        "top_p": agent_config["top_p"],
-        "min_p": agent_config["min_p"],
+        "model": agent_config.get("model", "missing"),
+        "api_base": agent_config.get("api_base", "missing"),
+        "token_limit": agent_config.get("token_limit", "missing"),
+        "tool_limit": agent_config.get("tool_limit", "missing"), 
+        "thinking": agent_config.get("thinking", "missing"),
+        "temperature": agent_config.get("temperature", "missing"),
+        "top_k": agent_config.get("top_k", "missing"),
+        "top_p": agent_config.get("top_p", "missing"),
+        "min_p": agent_config.get("min_p", "missing"),
     }
 
 def compare_baselines(current: dict, baseline: dict, current_config: dict = None):

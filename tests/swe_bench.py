@@ -208,7 +208,6 @@ def main():
     parser.add_argument("--token-limit", type=int, default=8192, help="Token limit")
     parser.add_argument("--tool-limit", type=int, default=20, help="Tool limit")
     parser.add_argument("--max-workers", type=int, default=8, help="Max parallel workers")
-    parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--repetitions", type=int, default=1, help="Number of repetitions per problem")
     
     args = parser.parse_args()
@@ -243,13 +242,12 @@ def main():
         "api_base": api_base,
         "token_limit": args.token_limit,
         "tool_limit": args.tool_limit,
-        "verbose": args.verbose,
-        "thinking": True,
+        "verbose": False,
+        "thinking": False,
         "temperature": 0.6,   
         "top_k": 20,
         "top_p": 0.95,
-        # "min_p": 0.05
-        # temp / top_k etc.
+        "min_p": 0.05
     }
     
     # Load baseline early to catch errors before running tests

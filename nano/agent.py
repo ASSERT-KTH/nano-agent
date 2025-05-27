@@ -146,10 +146,10 @@ class Agent:
             if self.verbose and msg.get("content"): print(msg["content"])
 
             if not msg.get("tool_calls"):
-                # the agent has made changes, and didn't request any more tools so it is done
-                if not is_clean(repo_root): break  
-                # otherwise, we remind the agent to operate autonomously
+                if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
+                # the agent hasn't made changes, so we remind it to operate autonomously
                 self._append({"role": "user", "content": warning("No changes detected. Continue working autonomously to complete the task.")})
+                continue
 
             for call in msg["tool_calls"]:  
                 name = call["function"]["name"]
