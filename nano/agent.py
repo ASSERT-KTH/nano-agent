@@ -38,8 +38,8 @@ Autonomous operation:
 - Cannot ask questions or seek clarification
 - Learn only from command outputs, errors, and files
 - Monitor remaining tools/tokens and adapt strategy
-- <nano:feedback> messages in tool outputs are informational only
-- <nano:warning> messages indicate problems requiring immediate strategy adjustment
+- <nano:feedback> tags provide informational messages from your environment
+- <nano:warning> tags signal issues requiring immediate action or strategy change
 
 Shell usage:
 - Find: `find . -name '*.py'` | `rg -l 'pattern'`
@@ -107,11 +107,13 @@ class Agent:
             api_base=api_base,
             temperature=temperature,
             top_p=top_p,
-            top_k=top_k,
-            min_p=min_p,
-            chat_template_kwargs={"enable_thinking": thinking},
-            drop_params=True,  # drop params that are not supported by the endpoint
         )
+        if not model.startswith(("openai/", "anthropic/")):  # most endpoints except these support these params
+            self.llm_kwargs.update(dict(
+                top_k=top_k,
+                min_p=min_p,
+                chat_template_kwargs={"enable_thinking": thinking},
+            ))
 
     @property
     def token_usage(self):
@@ -144,7 +146,10 @@ class Agent:
             if self.verbose and msg.get("content"): print(msg["content"])
 
             if not msg.get("tool_calls"):
-                break  # No tool calls requested, agent is either done or misunderstanding the task.
+                # the agent has made changes, and didn't request any more tools so it is done
+                if not is_clean(repo_root): break  
+                # otherwise, we remind the agent to operate autonomously
+                self._append({"role": "user", "content": warning("No changes detected. Continue working autonomously to complete the task.")})
 
             for call in msg["tool_calls"]:  
                 name = call["function"]["name"]
@@ -161,7 +166,6 @@ class Agent:
             
                 self._tool_reply(call, output)
                 self.remaining_tool_calls -= 1
-
 
         unified_diff = git_diff(repo_root)
         if self.log: self.diff_file.open("w").write(unified_diff)
@@ -180,13 +184,19 @@ class Agent:
         )
 
         msg = reply["choices"][0]["message"].model_dump()
+        
+        # Remove unsupported fields that can cause issues with token counting
+        # The OpenAI API directly includes an empty 'annotations' which causes token counting to fail
+        if "annotations" in msg and len(msg["annotations"]) == 0:
+            del msg["annotations"]
 
         self._append(msg)
 
         # Calculate actual token usage including reasoning tokens for thinking models
-        tokens_used = reply["usage"]["total_tokens"]
-        reasoning_tokens_used = reply["usage"].get("completion_tokens_details", {}).get("reasoning_tokens", 0)
-        self.remaining_tokens = self.token_limit - tokens_used - reasoning_tokens_used
+        usage = reply["usage"].model_dump()
+        normal_tokens = usage["completion_tokens"]
+        reasoning_tokens = usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)
+        self.remaining_tokens -= normal_tokens + reasoning_tokens
 
         return msg
 
