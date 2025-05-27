@@ -17,18 +17,20 @@ The test suite evaluates the agent's ability to solve software engineering probl
   - Runs problems in parallel with configurable repetitions
   - Calculates similarity scores between generated and expected patches
   - Tracks token usage, tool usage, and success rates
-  - Saves results as baseline files for comparison
+  - Integrates with baseline management for comparisons
 
-- **`compare_baselines.py`** - Baseline comparison tool
-  - Compares performance between different agent versions
-  - Shows per-problem improvements/regressions
-  - Analyzes token usage changes
-  - Identifies biggest performance deltas
+- **`baseline.py`** - Baseline management and comparison utilities
+  - Load and save baseline results
+  - Compare performance between different agent versions
+  - Generate baseline names with version info
+  - Analyze per-problem improvements/regressions
+  - Track configuration changes and performance deltas
 
 - **`utils.py`** - Utility functions
   - Repository cloning at specific commits
   - Patch similarity calculation using sequence matching
   - Safe temporary directory cleanup
+  - Git commit hash retrieval
 
 ### Test Data
 - **`data/`** - Test datasets and results
@@ -62,10 +64,10 @@ python tests/swe_bench.py --compare nano_1.1.0_70e60379_lite
 ### Comparing Baselines (without running new tests)
 ```bash
 # Use default comparison between predefined baselines
-python tests/compare_baselines.py
+python tests/baseline.py
 
 # Compare two existing baselines
-python tests/compare_baselines.py --baseline1 nano_1.1.0_70e60379_lite --baseline2 nano_2.0.0_d79af850_lite
+python tests/baseline.py nano_1.1.0_70e60379_lite nano_2.0.0_d79af850_lite
 ```
 
 ## Metrics
@@ -76,4 +78,24 @@ The test suite tracks:
 - **Token Usage**: Total tokens consumed per problem
 - **Tool Usage**: Number of tool calls made per problem
 
-Results include both per-problem statistics and aggregate metrics with standard deviations for multiple repetitions. 
+Results include both per-problem statistics and aggregate metrics with standard deviations for multiple repetitions.
+
+## Baseline Management
+
+The `baseline.py` module provides comprehensive baseline management:
+
+### Functions
+- `load_baseline(name)` - Load a baseline from JSON file
+- `save_baseline(name, results, metrics, config)` - Save test results as a new baseline
+- `generate_baseline_name(test_set, model)` - Auto-generate baseline names with version info
+- `build_config_snapshot(agent_config, test_set, repetitions, max_workers)` - Create reproducible config snapshots
+- `compare_baselines(current, baseline, current_config)` - Detailed comparison between baselines
+
+### Comparison Features
+- Configuration change tracking (model, version, parameters)
+- Per-problem performance analysis
+- Token usage optimization insights
+- Statistical significance with standard deviations
+- Identification of biggest improvements and regressions
+
+The modular design allows easy importing of baseline functions into other scripts and ensures clean separation of concerns between test execution and result management. 

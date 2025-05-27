@@ -192,11 +192,11 @@ class Agent:
 
         self._append(msg)
 
-        # Calculate actual token usage including reasoning tokens for thinking models
+        # Calculate actual token usage including reasoning tokens for thinking models (not included in total_tokens)
         usage = reply["usage"].model_dump()
-        normal_tokens = usage["completion_tokens"]
+        normal_tokens = usage["total_tokens"]
         reasoning_tokens = usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)
-        self.remaining_tokens -= normal_tokens + reasoning_tokens
+        self.remaining_tokens = self.token_limit - normal_tokens - reasoning_tokens
 
         return msg
 
