@@ -14,21 +14,17 @@
 
 ## What it is
 
-`Nano` is a zero‑bloat wrapper that turns any tool-enabled LLM into a coding agent with core tools:
+`Nano` is a zero‑bloat wrapper that turns any tool-enabled LLM into a coding agent with two tools:
 
 ```
 
 shell(cmd)  # ls, cat, grep …
 apply_patch({...})  # search/replace on one file
 
-# Optional tools that can be enabled
-create({...})  # create new files
-deepwiki({...})  # query repository documentation
-
 ```
 
-
 > **Note:** `Nano` uses `rbash` (restricted bash) to confine the agent to its designated workspace. This, along with Nano's requirement of starting in a clean git repository, helps ensure its operations remain contained and predictable.
+
 
 ---
 
@@ -67,14 +63,13 @@ Then you just need an API key for your chosen provider or host them yourself wit
 from nano import Agent
 from transformers import AutoTokenizer
 
-# Minimal by default - just shell and apply_patch
-agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=True)
+agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=False)
 agent.run("There is a bug in this repo...")
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
 tokens = tokenizer.apply_chat_template(
   agent.messages,
-  tools=agent.tools,  # Contains only enabled tools
+  tools=agent.tools,
   tokenize=True,
   return_format="pt"
 )

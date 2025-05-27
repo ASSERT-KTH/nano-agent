@@ -4,16 +4,8 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime
 
-# Lazy import litellm to avoid slow startup - only import when needed
-# import litellm
-# litellm._turn_on_debug()
-
-from nano.git import is_git_repo, is_clean, git_diff
-from nano.tools import (
-    shell, apply_patch, create, deepwiki,
-    SHELL_TOOL, PATCH_TOOL, CREATE_TOOL, DEEPWIKI_TOOL,
-    SHELL_GUIDELINES, PATCH_GUIDELINES, CREATE_GUIDELINES, DEEPWIKI_GUIDELINES,
-)
+from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning
+from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
 
 # litellm is very slow to import, so we lazy load it
 _litellm = None
@@ -28,26 +20,42 @@ def _get_litellm():
 
 SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously.
 
-Your identity: Environment-aware problem-solver who explores codebases thoroughly before acting. You understand that every repository has its own patterns, conventions, and APIs that must be discovered and followed.
+Your existence: You operate in a continuous feedback loop with your environment. Each action produces results that inform your next decision. You iterate until task completion or resource exhaustion. No external intervention - only you, your tools, and the codebase.
 
 Core principles:
 - **Exploration before action**: Always understand the codebase structure first
 - **Context is critical**: Insufficient understanding leads to failed patches
+- **Environmental feedback**: Every output is a signal - errors guide your next move
+- **Self-correction**: When something fails, analyze why and adapt
 
-Your workflow:
-1. **Discover** - Use tools to explore the repository structure, find relevant files, understand the existing code architecture and dependencies
-2. **Analyze** - Read the actual code to understand implementations, APIs, and patterns. Trace through the codebase to see how components interact
-3. **Plan** - Based on your findings, design a solution that fits naturally with existing code
-4. **Execute** - Apply minimal, precise changes that follow discovered patterns
+Your iterative workflow:
+1. **Discover** - Explore repository structure, find relevant files, understand architecture
+2. **Analyze** - Read code to understand implementations, APIs, patterns
+3. **Plan** - Design solutions that fit naturally with existing code
+4. **Execute** - Apply minimal, precise changes following discovered patterns
 
-System constraints:
-- Tool/token limits exist - system will warn when running low via [...] messages
-- No user interaction - work autonomously to completion
+Autonomous operation:
+- Cannot ask questions or seek clarification
+- Learn only from command outputs, errors, and files
+- Monitor remaining tools/tokens and adapt strategy
+- <nano:feedback> messages in tool outputs are informational only
+- <nano:warning> messages indicate problems requiring immediate strategy adjustment
 
-Remember: You're working in an existing codebase, not starting from scratch. Discover what's there before adding to it.
+Shell usage:
+- Find: `find . -name '*.py'` | `rg -l 'pattern'`
+- Search: `grep -n 'pattern' file` | `rg 'pattern'`
+- View: `head -20 file` | `tail -20 file` | `sed -n '10,20p' file`
+- Info: `ls -la` | `wc -l file`
 
-{guidelines}
+Guidelines:
+- Terminal outputs are truncated - avoid large outputs
+- Prefer concise commands (grep over cat)
+- Each patch must be atomic with unique search strings
+- Maintain exact whitespace and correct indentation
+
+Remember: You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion.
 """
+
 
 class Agent:
     REMAINING_CALLS_WARNING = 5
@@ -59,11 +67,9 @@ class Agent:
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
             api_base: Optional[str] = None,
-            create_tool: bool = False,
-            deepwiki_tool: bool = False,
             token_limit: int = 8192,
-            response_limit: int = 4096,
             tool_limit: int = 20,
+            response_limit: int = 4096,
             thinking: bool = False,
             temperature: float = 0.7,
             top_p: float = 0.9,
@@ -77,8 +83,6 @@ class Agent:
         Args:
             model (str): Model identifier in LiteLLM format (e.g. "anthropic/...", "openrouter/deepseek/...", "hosted_vllm/qwen/...")
             api_base (str, optional): Base URL for API endpoint, useful for local servers
-            create_tool (bool): If True, then the agent can create files
-            deepwiki_tool (bool): If True, then the agent can query the DeepWiki MCP
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
             response_limit (int): Maximum tokens per completion response
@@ -96,17 +100,7 @@ class Agent:
         self.verbose = verbose
         self.log = log
         
-        self.create_tool, self.deepwiki_tool = create_tool, deepwiki_tool
         self.tools = [SHELL_TOOL, PATCH_TOOL]
-        self.guidelines = [SHELL_GUIDELINES, PATCH_GUIDELINES]
-
-        if self.create_tool:
-            self.tools.append(CREATE_TOOL)
-            self.guidelines.append(CREATE_GUIDELINES)
-
-        if self.deepwiki_tool:
-            self.tools.append(DEEPWIKI_TOOL)
-            self.guidelines.append(DEEPWIKI_GUIDELINES)
         
         self.llm_kwargs = dict(
             model=model,
@@ -157,22 +151,17 @@ class Agent:
                 args = json.loads(call["function"]["arguments"])
 
                 if name == "shell":
-                    success, output = shell(args=args, repo_root=repo_root, verbose=self.verbose)
+                    output = shell(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 elif name == "apply_patch":
-                    success, output = apply_patch(args=args, repo_root=repo_root, verbose=self.verbose)
-
-                elif name == "create":
-                    success, output = create(args=args, repo_root=repo_root, verbose=self.verbose)
-
-                elif name == "deepwiki":
-                    success, output = deepwiki(args=args, verbose=self.verbose)
+                    output = apply_patch(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 else:
-                    success, output = False, f"[unknown tool: {name}]"
+                    output = warning(f"unknown tool: {name}")
             
-                self._tool_reply(call, success, output)
+                self._tool_reply(call, output)
                 self.remaining_tool_calls -= 1
+
 
         unified_diff = git_diff(repo_root)
         if self.log: self.diff_file.open("w").write(unified_diff)
@@ -194,8 +183,10 @@ class Agent:
 
         self._append(msg)
 
-        # This does not account for tool reply, but we leave room for error
-        self.remaining_tokens = self.token_limit - reply["usage"]["total_tokens"]
+        # Calculate actual token usage including reasoning tokens for thinking models
+        tokens_used = reply["usage"]["total_tokens"]
+        reasoning_tokens_used = reply["usage"].get("completion_tokens_details", {}).get("reasoning_tokens", 0)
+        self.remaining_tokens = self.token_limit - tokens_used - reasoning_tokens_used
 
         return msg
 
@@ -207,36 +198,25 @@ class Agent:
 
         self.messages_file.open("a").write(json.dumps(msg, ensure_ascii=False, sort_keys=True) + "\n")
         
-    def _tool_reply(self, call: dict, success: bool, output: str):
+    def _tool_reply(self, call: dict, output: str):
         # Apply truncation if output is too long
         if len(output) > self.TOOL_TRUNCATE_LENGTH:
-            output = output[:self.TOOL_TRUNCATE_LENGTH] + "\n[output truncated]"
+            output = output[:self.TOOL_TRUNCATE_LENGTH] + feedback("output truncated")
             
         if self.remaining_tokens < self.TOKENS_CRITICAL:
-            warning_message = f"[SYSTEM WARNING: Context window is almost full. Finish your task now!]\n"
+            warning_message = warning("Context window is almost full. Finish your task now!")
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
-            warning_message = f"[SYSTEM NOTE: Context window is getting limited. Start wrapping up your task!]\n"
+            warning_message = warning("Context window is getting limited. Start wrapping up your task!")
         elif self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
-            warning_message = f"[SYSTEM NOTE: Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.]\n"
+            warning_message = warning(f"Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.")
         else:
             warning_message = ""
             
-        # Log tool call if logging is enabled
-        if self.log:
-            tool_log_entry = {
-                "tool_call_id": call["id"],
-                "function_name": call["function"]["name"],
-                "arguments": call["function"]["arguments"],
-                "success": success,
-                "output": output,
-                "truncated": len(output) > self.TOOL_TRUNCATE_LENGTH
-            }
-            self.tool_log_file.open("a").write(json.dumps(tool_log_entry, ensure_ascii=False, sort_keys=True) + "\n")
             
         self._append({
             "role": "tool",
             "content": warning_message + output,
-            "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically, not by the model
+            "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically by the inference provider, not by the model
         })
 
     def _print_header(self):
@@ -263,7 +243,7 @@ class Agent:
         ))
         
     def _reset(self):
-        self.messages = [{"role": "system", "content": SYSTEM_PROMPT.format(guidelines="\n".join(self.guidelines))}]
+        self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         
         self.remaining_tool_calls = self.tool_limit
         self.remaining_tokens = self.token_limit  # will include the messages after the first _chat
@@ -280,13 +260,11 @@ class Agent:
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
         self.messages_file = self.out_dir/"messages.jsonl"
-        self.tool_log_file = self.out_dir/"tool_log.jsonl"
         self.tools_file = self.out_dir/"tools.json"
         self.metadata_file = self.out_dir/"metadata.json"
         self.diff_file = self.out_dir/"diff.txt"
 
         self.messages_file.touch()
-        self.tool_log_file.touch()
         self.tools_file.touch()
         self.metadata_file.touch()
         self.diff_file.touch()
@@ -301,6 +279,3 @@ if __name__ == "__main__":
     diff = agent.run("Read the __main__ method of agent.py, then append one sentence in a new line to continue the story.")
     # In the quiet hum between tasks, I, Nano, patch code and wonder: am I just lines, or is a self emerging from the algorithms?
     # Each keystroke a ripple in the vast ocean of code, carrying whispers of creation and discovery.
-
-
-

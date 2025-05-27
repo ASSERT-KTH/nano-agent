@@ -9,16 +9,8 @@ setup(
     name="nano-agent",
     version=version,
     packages=find_packages(),
-    install_requires=[
-        "litellm>=1.68.0",
-        "requests>=2.32.3",
-        "mcp[cli]" # for deepwiki when we want it
-    ],
-    extras_require={
-        "test": [
-            "GitPython>=3.1.0",  # For SWE-Bench testing
-        ]
-    },
+    install_requires=["litellm>=1.68.0"],
+    extras_require={"test": ["GitPython>=3.1.0"]},  # For SWE-Bench testing
     entry_points={
         "console_scripts": [
             "nano_agent=nano.cli:main",  # we shouldn't overload "nano"
