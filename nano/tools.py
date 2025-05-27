@@ -35,30 +35,35 @@ PATCH_TOOL = {
 
 
 def shell(args: dict, repo_root: Path, timeout: int = 4, verbose: bool = False) -> str:
-    """Run a shell command using rbash with timeout and output limits."""
+    """Run a shell command using bash with timeout and output limits."""
 
     if "cmd" not in args:
         if verbose: print("invalid shell call")
         return warning("invalid `shell` arguments")
     
     cmd = args["cmd"]
-    
     if verbose: print(f"shell({cmd})")
-
+    
     try:
         res = subprocess.run(
             ["bash", "-rc", cmd], cwd=repo_root,
-            timeout=timeout, text=True, errors="ignore", stderr=subprocess.STDOUT, stdout=subprocess.PIPE
+            timeout=timeout, text=True, errors="ignore", 
+            stderr=subprocess.STDOUT, stdout=subprocess.PIPE  # merges stderr into stdout
         )
-    except Exception as e:
-        return feedback(f"shell failed: {e}")
-
-    out = res.stdout or ""
-
-    if res.returncode != 0:
-        return feedback(f"command failed: exit {res.returncode}") + "\n" + (out or feedback("no output"))
-    
-    return out.strip() or feedback("no output")
+        
+        output = res.stdout.strip() if res.stdout else ""
+        
+        if res.returncode == 0:  # success
+            if output: return output
+            else: return feedback(f"command succeeded with no output (exit 0)")
+        else:  # failure
+            if output: return feedback(f"command failed (exit {res.returncode})") + "\n" + output
+            else: return feedback(f"command failed (exit {res.returncode})")
+                
+    except subprocess.TimeoutExpired:
+        return warning(f"command timed out after {timeout}s")
+    except:
+        return warning(f"shell execution failed")
 
 
 def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
@@ -69,12 +74,10 @@ def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
         return warning("invalid `apply_patch` arguments")
     
     search, replace, file = args["search"], args["replace"], args["file"]
-
     if verbose: print(f"apply_patch(..., ..., {file})")
 
     try:
         target = repo_root / file
-
         if not target.exists():
             return feedback(f"file {target} not found")
         
@@ -91,5 +94,5 @@ def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
         target.write_text(new_text)
         return feedback("patch applied successfully")
 
-    except Exception as e:
-        return feedback(f"failed to apply patch: {e}")
+    except:
+        return feedback("patch operation failed")
