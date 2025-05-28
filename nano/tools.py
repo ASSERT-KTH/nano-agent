@@ -77,9 +77,12 @@ def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
     if verbose: print(f"apply_patch(..., ..., {file})")
 
     try:
-        target = repo_root / file
+        target = (repo_root / file).resolve()
+        if not str(target).startswith(str(repo_root.resolve())):
+            return feedback("file must be inside the repository")
+        
         if not target.exists():
-            return feedback(f"file {target} not found")
+            return feedback(f"file {file} not found")
         
         text = target.read_text()
         search_count = text.count(search)

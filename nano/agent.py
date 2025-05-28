@@ -44,7 +44,7 @@ Autonomous operation:
 Shell usage:
 - Find: `find . -name '*.py'` | `rg -l 'pattern'`
 - Search: `grep -n 'pattern' file` | `rg 'pattern'`
-- View: `head -20 file` | `tail -20 file` | `sed -n '10,20p' file`
+- View: `sed -n '10,20p' file` | `head -20 file` | `tail -20 file`
 - Info: `ls -la` | `wc -l file`
 
 Guidelines:
@@ -195,7 +195,8 @@ class Agent:
         # Calculate actual token usage including reasoning tokens for thinking models (not included in total_tokens)
         usage = reply["usage"].model_dump()
         normal_tokens = usage["total_tokens"]
-        reasoning_tokens = usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)
+        completion_info = usage.get("completion_tokens_details", {}) or {}
+        reasoning_tokens = completion_info.get("reasoning_tokens", 0)
         self.remaining_tokens = self.token_limit - normal_tokens - reasoning_tokens
 
         return msg
