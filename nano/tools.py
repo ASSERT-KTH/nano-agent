@@ -7,26 +7,26 @@ SHELL_TOOL = {
     "type": "function",
     "function": {
         "name": "shell",
-        "description": "Run read-only shell command. Output is truncated.",
+        "description": "Run shell command. Use for: finding files (find, rg -l), reading files (head, grep -n), checking structure (ls -la). Output truncated to ~2000 chars.",
         "parameters": {
             "type": "object",
-            "properties": {"cmd": {"type": "string"}},
+            "properties": {"cmd": {"type": "string", "description": "Command like: grep -n 'def function' file.py"}},
             "required": ["cmd"]
         }
     }
 }
 
 PATCH_TOOL = {
-    "type": "function",
+    "type": "function", 
     "function": {
         "name": "apply_patch",
-        "description": "Apply exact literal SEARCH/REPLACE to a file. Search must match exactly one location.",
+        "description": "Replace exact text in file. The search string must appear exactly once. If patch fails, re-read the file and try again with corrected search.",
         "parameters": {
             "type": "object",
             "properties": {
-                "search": {"type": "string"},
-                "replace": {"type": "string"},
-                "file": {"type": "string"}
+                "search": {"type": "string", "description": "Exact text to find (including whitespace/indentation)"},
+                "replace": {"type": "string", "description": "New text to replace with"},
+                "file": {"type": "string", "description": "Relative path like: src/main.py"}
             },
             "required": ["search", "replace", "file"]
         }
@@ -88,10 +88,10 @@ def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
         search_count = text.count(search)
 
         if search_count == 0:
-            return feedback("search string not found")
+            return feedback("search string not found - try: 1) grep -n for the pattern, 2) head -30 to see actual content")
         
         if search_count > 1:
-            return feedback(f"ambiguous search string: {search_count} occurrences")
+            return feedback(f"search ambiguous: {search_count} matches - add more context to make search unique")
         
         new_text = text.replace(search, replace, 1)
         target.write_text(new_text)
