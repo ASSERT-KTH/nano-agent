@@ -53,8 +53,7 @@ Guidelines:
 - Each patch must be atomic with unique search strings
 - Maintain exact whitespace and correct indentation
 
-Remember: You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion.
-"""
+Remember: You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion."""
 
 
 class Agent:
@@ -117,9 +116,8 @@ class Agent:
 
     @property
     def token_usage(self):
-        """Return the total token count of the conversation (may exceed token_limit)."""
-        litellm = _get_litellm()  # Lazy load and cache
-        return litellm.token_counter(model=self.llm_kwargs["model"], messages=self.messages)
+        """Return the total token count used (accurate up to the last tool call)."""
+        return self.token_limit - getattr(self, "remaining_tokens", self.token_limit)
     
     @property
     def tool_usage(self):
@@ -148,7 +146,7 @@ class Agent:
             if not msg.get("tool_calls"):
                 if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
                 # the agent hasn't made changes, so we remind it to operate autonomously
-                self._append({"role": "user", "content": warning("No changes detected. Continue working autonomously to complete the task.")})
+                self._append({"role": "user", "content": warning("Use shell to explore or apply_patch to make changes. Do not stop working.")})
                 continue
 
             for call in msg["tool_calls"]:  
@@ -173,22 +171,21 @@ class Agent:
         return unified_diff
 
     def _chat(self) -> dict:
-        litellm = _get_litellm()  # Lazy load and cache
+        # Dynamic response sizing to prevent context window errors
+        # Use remaining_tokens which accounts for thinking tokens
+        safety_buffer = int(self.token_limit * 0.1)  # 10% safety margin
+        available = max(0, self.remaining_tokens - safety_buffer)
         
+        litellm = _get_litellm()  # Lazy load and cache
         reply = litellm.completion(
             **self.llm_kwargs,
-            max_tokens=min(self.response_limit, self.remaining_tokens),
+            max_tokens=max(256, min(self.response_limit, available // 2)),
             messages=self.messages,
             tools=self.tools,
             tool_choice="auto",
         )
 
         msg = reply["choices"][0]["message"].model_dump()
-        
-        # Remove unsupported fields that can cause issues with token counting
-        # The OpenAI API directly includes an empty 'annotations' which causes token counting to fail
-        if "annotations" in msg and len(msg["annotations"]) == 0:
-            del msg["annotations"]
 
         self._append(msg)
 
@@ -213,13 +210,16 @@ class Agent:
         # Apply truncation if output is too long
         if len(output) > self.TOOL_TRUNCATE_LENGTH:
             output = output[:self.TOOL_TRUNCATE_LENGTH] + feedback("output truncated")
-            
+        
+        # ordered by priority
         if self.remaining_tokens < self.TOKENS_CRITICAL:
-            warning_message = warning("Context window is almost full. Finish your task now!")
+            warning_message = warning("Token limit critical! Apply your best fix now.")
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
-            warning_message = warning("Context window is getting limited. Start wrapping up your task!")
-        elif self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
-            warning_message = warning(f"Only {self.remaining_tool_calls} tool calls remaining. Please finish soon.")
+            warning_message = warning("Tokens low. Focus on the main issue only.")
+        elif 1 < self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
+            warning_message = warning(f"{self.remaining_tool_calls} tools left. Prioritize essential changes.")
+        elif self.remaining_tool_calls == 1:
+            warning_message = warning("Last tool call! Make it count.")
         else:
             warning_message = ""
             
