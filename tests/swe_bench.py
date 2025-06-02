@@ -206,7 +206,7 @@ def main():
     parser.add_argument("--baseline", action="store_true", help="Save results as a new baseline")
     parser.add_argument("--compare", help="Compare to this baseline")
     parser.add_argument("--token-limit", type=int, default=8192, help="Token limit")
-    parser.add_argument("--tool-limit", type=int, default=20, help="Tool limit")
+    parser.add_argument("--tool-limit", type=int, default=100, help="Tool limit")
     parser.add_argument("--max-workers", type=int, default=8, help="Max parallel workers")
     parser.add_argument("--repetitions", type=int, default=1, help="Number of repetitions per problem")
     
