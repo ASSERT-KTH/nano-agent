@@ -29,6 +29,7 @@ def generate_leaderboard_markdown() -> str:
             "name": name,
             "success_rate": metrics["success_rate"],
             "avg_similarity": metrics["avg_similarity"],
+            "avg_test_similarity": metrics.get("avg_test_similarity", 0.0),
             "avg_tokens": metrics["avg_tokens"],
             "avg_tools": metrics["avg_tools"],
             "created_at": data.get("created_at", 0)
@@ -43,8 +44,8 @@ def generate_leaderboard_markdown() -> str:
         "",
         "All baseline runs ranked by similarity score:",
         "",
-        "| Rank | Version | Model | Similarity | Tokens | Tools | Date |",
-        "|------|---------|-------|------------|--------|-------|------|"
+        "| Rank | Version | Model | Similarity | Test Similarity | Tokens | Tools | Date |",
+        "|------|---------|-------|------------|-----------------|--------|-------|------|"
     ]
     
     for i, result in enumerate(all_results[:10], 1):
@@ -57,6 +58,7 @@ def generate_leaderboard_markdown() -> str:
         lines.append(
             f"| {i} | v{result['version']} | {model_display} | "
             f"{result['avg_similarity']:.3f} | "
+            f"{result['avg_test_similarity']:.3f} | "
             f"{result['avg_tokens']:.0f} | {result['avg_tools']:.1f} | {date_str} |"
         )
     
@@ -66,6 +68,7 @@ def generate_leaderboard_markdown() -> str:
         "",
         "**Key Metrics:**",
         "- **Similarity**: Average patch similarity score (ranked by this)",
+        "- **Test Similarity**: Average test patch similarity score (0.000 for older baselines)",
         "- **Tokens**: Average token usage per problem", 
         "- **Tools**: Average tool calls per problem",
         ""

@@ -38,8 +38,11 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
             repo_root=repo_path
         )
         
-        # Calculate similarity
+        # Calculate similarities
         similarity = unified_diff_similarity(problem["patch"], generated_diff)
+        test_similarity = unified_diff_similarity(problem["test_patch"], generated_diff)
+        
+        # Success based on main patch similarity
         success = similarity > 0.3
         
         result = {
@@ -47,6 +50,7 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
             "repetition": repetition,
             "success": success,
             "similarity": similarity,
+            "test_similarity": test_similarity,
             "token_usage": agent.token_usage,
             "tool_usage": agent.tool_limit - agent.remaining_tool_calls, #agent.tool_usage,
         }
@@ -58,6 +62,7 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
             "repetition": repetition,
             "success": False,
             "similarity": 0.0,
+            "test_similarity": 0.0,
             "token_usage": 0,
             "tool_usage": 0,
             "error": str(e)
@@ -93,6 +98,7 @@ def run_problems_parallel(problems: list, agent_config: dict, max_workers: int =
                     "repetition": 0,
                     "success": False,
                     "similarity": 0.0,
+                    "test_similarity": 0.0,
                     "token_usage": 0,
                     "tool_usage": 0,
                     "error": str(e)
@@ -118,6 +124,7 @@ def compute_metrics(results: list) -> dict:
     for instance_id, instance_results in by_instance.items():
         successes = [r["success"] for r in instance_results]
         similarities = [r["similarity"] for r in instance_results]
+        test_similarities = [r.get("test_similarity", 0.0) for r in instance_results]
         tokens = [r["token_usage"] for r in instance_results if r["token_usage"] > 0]
         tools = [r["tool_usage"] for r in instance_results if r["tool_usage"] > 0]
         
@@ -127,6 +134,8 @@ def compute_metrics(results: list) -> dict:
             "success_std": statistics.stdev(successes) if len(successes) > 1 else 0.0,
             "avg_similarity": statistics.mean(similarities),
             "similarity_std": statistics.stdev(similarities) if len(similarities) > 1 else 0.0,
+            "avg_test_similarity": statistics.mean(test_similarities),
+            "test_similarity_std": statistics.stdev(test_similarities) if len(test_similarities) > 1 else 0.0,
             "avg_tokens": statistics.mean(tokens) if tokens else 0,
             "tokens_std": statistics.stdev(tokens) if len(tokens) > 1 else 0.0,
             "avg_tools": statistics.mean(tools) if tools else 0,
@@ -137,6 +146,7 @@ def compute_metrics(results: list) -> dict:
     # Method 1: Average across all individual runs (traditional)
     all_successes = [r["success"] for r in results]
     all_similarities = [r["similarity"] for r in results]
+    all_test_similarities = [r.get("test_similarity", 0.0) for r in results]
     all_tokens = [r["token_usage"] for r in results if r["token_usage"] > 0]
     all_tools = [r["tool_usage"] for r in results if r["tool_usage"] > 0]
     
@@ -145,6 +155,8 @@ def compute_metrics(results: list) -> dict:
         "success_std": statistics.stdev(all_successes) if len(all_successes) > 1 else 0.0,
         "avg_similarity": statistics.mean(all_similarities),
         "similarity_std": statistics.stdev(all_similarities) if len(all_similarities) > 1 else 0.0,
+        "avg_test_similarity": statistics.mean(all_test_similarities),
+        "test_similarity_std": statistics.stdev(all_test_similarities) if len(all_test_similarities) > 1 else 0.0,
         "avg_tokens": statistics.mean(all_tokens) if all_tokens else 0,
         "tokens_std": statistics.stdev(all_tokens) if len(all_tokens) > 1 else 0.0,
         "avg_tools": statistics.mean(all_tools) if all_tools else 0,
@@ -154,6 +166,7 @@ def compute_metrics(results: list) -> dict:
     # Method 2: Average across per-problem averages (more robust to repetition imbalance)
     problem_success_rates = [stats["success_rate"] for stats in per_problem_stats.values()]
     problem_similarities = [stats["avg_similarity"] for stats in per_problem_stats.values()]
+    problem_test_similarities = [stats["avg_test_similarity"] for stats in per_problem_stats.values()]
     problem_tokens = [stats["avg_tokens"] for stats in per_problem_stats.values() if stats["avg_tokens"] > 0]
     problem_tools = [stats["avg_tools"] for stats in per_problem_stats.values() if stats["avg_tools"] > 0]
     
@@ -162,6 +175,8 @@ def compute_metrics(results: list) -> dict:
         "success_std": statistics.stdev(problem_success_rates) if len(problem_success_rates) > 1 else 0.0,
         "avg_similarity": statistics.mean(problem_similarities),
         "similarity_std": statistics.stdev(problem_similarities) if len(problem_similarities) > 1 else 0.0,
+        "avg_test_similarity": statistics.mean(problem_test_similarities),
+        "test_similarity_std": statistics.stdev(problem_test_similarities) if len(problem_test_similarities) > 1 else 0.0,
         "avg_tokens": statistics.mean(problem_tokens) if problem_tokens else 0,
         "tokens_std": statistics.stdev(problem_tokens) if len(problem_tokens) > 1 else 0.0,
         "avg_tools": statistics.mean(problem_tools) if problem_tools else 0,
@@ -178,6 +193,8 @@ def compute_metrics(results: list) -> dict:
         "success_std": global_problem_based["success_std"],
         "avg_similarity": global_problem_based["avg_similarity"],
         "similarity_std": global_problem_based["similarity_std"],
+        "avg_test_similarity": global_problem_based["avg_test_similarity"],
+        "test_similarity_std": global_problem_based["test_similarity_std"],
         "avg_tokens": global_problem_based["avg_tokens"],
         "tokens_std": global_problem_based["tokens_std"],
         "avg_tools": global_problem_based["avg_tools"],
@@ -276,15 +293,17 @@ def main():
     
     # Show standard deviations if we have repetitions
     if args.repetitions > 1:
-        print(f"Success Rate:    {metrics['success_rate']:.3f} ± {metrics['success_std']:.3f}")
-        print(f"Avg Similarity:  {metrics['avg_similarity']:.3f} ± {metrics['similarity_std']:.3f}")
-        print(f"Avg Tokens:      {metrics['avg_tokens']:.0f} ± {metrics['tokens_std']:.0f}")
-        print(f"Avg Tools:       {metrics['avg_tools']:.1f} ± {metrics['tools_std']:.1f}")
+        print(f"Success Rate:      {metrics['success_rate']:.3f} ± {metrics['success_std']:.3f}")
+        print(f"Avg Similarity:    {metrics['avg_similarity']:.3f} ± {metrics['similarity_std']:.3f}")
+        print(f"Avg Test Sim:      {metrics['avg_test_similarity']:.3f} ± {metrics['test_similarity_std']:.3f}")
+        print(f"Avg Tokens:        {metrics['avg_tokens']:.0f} ± {metrics['tokens_std']:.0f}")
+        print(f"Avg Tools:         {metrics['avg_tools']:.1f} ± {metrics['tools_std']:.1f}")
     else:
-        print(f"Success Rate:    {metrics['success_rate']:.3f}")
-        print(f"Avg Similarity:  {metrics['avg_similarity']:.3f}")
-        print(f"Avg Tokens:      {metrics['avg_tokens']:.0f}")
-        print(f"Avg Tools:       {metrics['avg_tools']:.1f}")
+        print(f"Success Rate:      {metrics['success_rate']:.3f}")
+        print(f"Avg Similarity:    {metrics['avg_similarity']:.3f}")
+        print(f"Avg Test Sim:      {metrics['avg_test_similarity']:.3f}")
+        print(f"Avg Tokens:        {metrics['avg_tokens']:.0f}")
+        print(f"Avg Tools:         {metrics['avg_tools']:.1f}")
     
     # Handle baseline operations
     if args.baseline:
