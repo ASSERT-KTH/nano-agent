@@ -9,6 +9,7 @@ import statistics
 from nano import Agent, __version__
 from utils import clone_repo_at_commit, clean_repo_dir, unified_diff_similarity, get_git_commit_hash
 from baseline import load_baseline, save_baseline, generate_baseline_name, build_config_snapshot, compare_baselines
+from leaderboard import update_readme_leaderboard
 
 # Minimal logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -291,6 +292,13 @@ def main():
         config_snapshot = build_config_snapshot(agent_config, test_set, args.repetitions, args.max_workers)
         save_baseline(auto_name, results, metrics, config_snapshot)
         print(f"💾 Auto-saved as baseline: {auto_name}")
+        
+        # Update leaderboard in README
+        try:
+            update_readme_leaderboard()
+            print(f"📊 Updated leaderboard in README.md")
+        except Exception as e:
+            print(f"⚠️  Failed to update leaderboard: {e}")
     
     if baseline:
         config_snapshot = build_config_snapshot(agent_config, test_set, args.repetitions, args.max_workers)

@@ -26,6 +26,19 @@ The test suite evaluates the agent's ability to solve software engineering probl
   - Analyze per-problem improvements/regressions
   - Track configuration changes and performance deltas
 
+- **`analyze.py`** - Comprehensive baseline analysis tool
+  - Groups baselines by version and model for easy comparison
+  - Ranks performance by any metric (success, similarity, tokens, tools)
+  - Shows version evolution and model comparisons
+  - Search and filter baseline collections
+  - Clean tabular output with context-aware column display
+
+- **`leaderboard.py`** - Automatic leaderboard generation
+  - Updates main README.md with current performance rankings
+  - Automatically triggered when saving new baselines (`--baseline`)
+  - Can be run manually to refresh leaderboard
+  - Ranks by similarity score (most important metric)
+
 - **`utils.py`** - Utility functions
   - Repository cloning at specific commits
   - Patch similarity calculation using sequence matching
@@ -54,14 +67,35 @@ python tests/swe_bench.py --quick
 # Run with multiple repetitions and custom settings
 python tests/swe_bench.py --repetitions 3 --max-workers 4 --model "openrouter/openai/gpt-4.1"
 
-# Save results as a new baseline (for future comparisons)
+# Save results as a new baseline (automatically updates leaderboard)
 python tests/swe_bench.py --baseline
 
 # Run tests AND compare results against an existing baseline
 python tests/swe_bench.py --compare nano_1.1.0_70e60379_lite
 ```
 
-### Comparing Baselines (without running new tests)
+### Analyzing Baselines
+```bash
+# Show summary of all baseline groups
+python tests/analyze.py
+
+# Find top performers by different metrics
+python tests/analyze.py --highest success_rate
+python tests/analyze.py --highest avg_similarity
+python tests/analyze.py --lowest avg_tokens
+python tests/analyze.py --lowest avg_tools
+
+# Compare models for a specific version
+python tests/analyze.py --compare-models 3.1.1
+
+# Track evolution of a model across versions
+python tests/analyze.py --evolution deepseek-chat
+
+# Search baselines by pattern
+python tests/analyze.py --search "deepseek"
+```
+
+### Comparing Specific Baselines (without running new tests)
 ```bash
 # Use default comparison between predefined baselines
 python tests/baseline.py
@@ -80,18 +114,27 @@ The test suite tracks:
 
 Results include both per-problem statistics and aggregate metrics with standard deviations for multiple repetitions.
 
-## Baseline Management
+## Baseline Analysis
 
-The `baseline.py` module provides comprehensive baseline management:
+### Collection Analysis (`analyze.py`)
+The analysis tool automatically groups baselines by (version, model) and provides multiple views:
 
-### Functions
+**Summary View**: Shows latest performance for each group with automatic history for multi-baseline groups
+**Ranking Views**: Top performers by any metric with context-aware column display
+**Comparison Views**: Side-by-side model comparisons or version evolution tracking
+**Search**: Pattern-based filtering with detailed baseline information
+
+### Individual Comparisons (`baseline.py`)
+For detailed comparison between two specific baselines:
+
+**Functions**:
 - `load_baseline(name)` - Load a baseline from JSON file
 - `save_baseline(name, results, metrics, config)` - Save test results as a new baseline
 - `generate_baseline_name(test_set, model)` - Auto-generate baseline names with version info
 - `build_config_snapshot(agent_config, test_set, repetitions, max_workers)` - Create reproducible config snapshots
 - `compare_baselines(current, baseline, current_config)` - Detailed comparison between baselines
 
-### Comparison Features
+**Features**:
 - Configuration change tracking (model, version, parameters)
 - Per-problem performance analysis
 - Token usage optimization insights
