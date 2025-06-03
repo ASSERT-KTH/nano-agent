@@ -63,7 +63,7 @@ Then you just need an API key for your chosen provider or host them yourself wit
 from nano import Agent
 from transformers import AutoTokenizer
 
-agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=False)
+agent = Agent(model="openai/gpt-4.1-mini")
 agent.run("There is a bug in this repo...")
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
@@ -91,7 +91,6 @@ Repo.clone_from(f"https://github.com/{run['repo']}.git", tempdir)
 agent = Agent(
     model="hosted_vllm/qwen/qwen3-8b",
     api_base="http://localhost:8000/v1",
-    thinking=True  # enables <think> ... </think> reasoning blocks
 )
 diff = agent.run(run["problem_statement"], repo_root=tempdir)
 print(diff)  # the unified diff produced by the agent
@@ -137,17 +136,17 @@ Latest performance across all nano-agent versions and models:
 | Rank | Version | Model | Similarity | Tokens | Tools | Date |
 |------|---------|-------|------------|--------|-------|------|
 | 1 | v3.2.0 | deepseek-chat | 0.413 | 3484 | 7.8 | 2025-06-03 |
-| 2 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
-| 3 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
-| 4 | v5.0.0 | deepseek-chat | 0.332 | 5508 | 19.2 | 2025-06-03 |
-| 5 | v4.0.0 | deepseek-chat | 0.329 | 5361 | 25.6 | 2025-06-03 |
-| 6 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
-| 7 | v1.1.0 | gpt-4.1-mini | 0.317 | 8767 | 30.7 | 2025-05-25 |
-| 8 | v3.0.0 | gpt-4.1 | 0.315 | 9455 | 37.7 | 2025-05-28 |
-| 9 | v3.0.0 | gpt-4.1-mini | 0.286 | 9082 | 31.3 | 2025-05-28 |
-| 10 | v3.0.0 | qwen3-32b | 0.275 | 5579 | 37.2 | 2025-05-30 |
+| 2 | v3.2.0 | gpt-4.1 | 0.402 | 5745 | 18.5 | 2025-06-03 |
+| 3 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
+| 4 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
+| 5 | v5.0.0 | deepseek-chat | 0.332 | 5508 | 19.2 | 2025-06-03 |
+| 6 | v4.0.0 | deepseek-chat | 0.329 | 5361 | 25.6 | 2025-06-03 |
+| 7 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
+| 8 | v1.1.0 | gpt-4.1-mini | 0.317 | 8767 | 30.7 | 2025-05-25 |
+| 9 | v3.0.0 | gpt-4.1 | 0.315 | 9455 | 37.7 | 2025-05-28 |
+| 10 | v3.0.0 | gpt-4.1-mini | 0.286 | 9082 | 31.3 | 2025-05-28 |
 
-*Updated automatically with 14 total configurations*
+*Updated automatically with 15 total configurations*
 
 **Key Metrics:**
 - **Similarity**: Average patch similarity score (ranked by this)

@@ -36,10 +36,10 @@ You have two tools: `shell` for executing terminal commands and `apply_patch` fo
 - **Terminal outputs are truncated**: Avoid commands that generate large outputs
 
 **Shell guidelines:**
-- Find: `find . -name '*.py'` | `rg -l 'pattern'`
-- Search: `grep -n 'pattern' file` | `rg 'pattern'`
-- View: `sed -n '10,20p' file` | `head -20 file` | `tail -20 file`
-- Info: `ls -la` | `wc -l file`
+- Find by identifier: `rg -l 'ClassName|function_name|error_text'`
+- Narrow searches: `rg -n 'pattern' path/to/likely/dir --type py`
+- View context: `sed -n '10,20p' file` or `grep -B5 -A5 'pattern' file`
+- Check structure: `ls -la specific/dir/` before broad exploration.
 
 **Patch guidelines:**
 - Each patch must be atomic with unique search strings
@@ -53,6 +53,7 @@ You have two tools: `shell` for executing terminal commands and `apply_patch` fo
 - <nano:warning> tags signal issues requiring immediate action or strategy change
 
 You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion."""
+
 
 
 class Agent:
