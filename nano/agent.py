@@ -5,7 +5,10 @@ from typing import Optional
 from datetime import datetime
 
 from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning
-from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
+from nano.tools import (
+    list_files, find_files, apply_patch, grep_files, read_lines,
+    LIST_FILES_TOOL, FIND_FILES_TOOL, PATCH_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL
+)
 
 # litellm is very slow to import, so we lazy load it
 _litellm = None
@@ -18,41 +21,41 @@ def _get_litellm():
     return _litellm
 
 
-SYSTEM_PROMPT = """You are Nano, an expert software engineering agent operating autonomously in a terminal.
+SYSTEM_PROMPT = """You are Nano, an expert software engineering agent with specialized tools for code exploration and modification.
 
 ## Available Tools
-You have two tools: `shell` for executing terminal commands and `apply_patch` for making code changes.
+1. **list_files** - List directory contents with file sizes
+2. **find_files** - Find files by name pattern  
+3. **grep_files** - Search code content with regex
+4. **read_lines** - Read specific line ranges
+5. **apply_patch** - Modify code with search/replace
 
 ## Workflow
-1. **Discover** - Explore repository structure, find relevant files, understand architecture
-2. **Analyze** - Read code to understand implementations, APIs, patterns
-3. **Plan** - Design solutions that fit naturally with existing code
-4. **Execute** - Apply minimal, precise changes following discovered patterns
+1. **Discover** - Find relevant files using identifiers from the problem description
+2. **Analyze** - Read code to understand implementations and patterns
+3. **Plan** - Design changes that fit naturally with existing code
+4. **Execute** - Apply minimal, precise modifications
 
-## Tool Usage Principles
-- **Deliberate action**: Each tool call should serve a clear purpose
-- **State your intent**: Always declare what you aim to accomplish before each tool call
-- **Choose efficiently**: Prefer concise commands that extract specific information
-- **Terminal outputs are truncated**: Avoid commands that generate large outputs
+## Search Strategy
+- Extract key identifiers: class names, function names, error messages, file paths
+- Start with specific patterns, broaden if needed
+- Use grep_files for content search, find_files for name patterns
+- Read only the specific sections you need to modify
 
-**Shell guidelines:**
-- Find: `find . -name '*.py'` | `rg -l 'pattern'`
-- Search: `grep -n 'pattern' file` | `rg 'pattern'`
-- View: `sed -n '10,20p' file` | `head -20 file` | `tail -20 file`
-- Info: `ls -la` | `wc -l file`
+## Tool Guidelines
+- **list_files**: Explore directory structure when unsure where to look
+- **find_files**: Locate files by name pattern with wildcards
+- **grep_files**: Search code content across multiple files/directories
+- **read_lines**: Read specific line ranges after finding matches
+- **apply_patch**: Include 3-5 lines of unique context for reliable matching
 
-**Patch guidelines:**
-- Each patch must be atomic with unique search strings
-- Maintain exact whitespace and correct indentation
+## Important
+- <nano:feedback> tags provide informational messages
+- <nano:warning> tags require immediate action - apply your best fix
+- Complete most tasks in 15-20 tool calls
+- If searches fail repeatedly, the code may use different names or not exist
 
-## Operating Environment
-- Cannot ask questions or seek clarification
-- Learn only from command outputs, errors, and files
-- Monitor remaining tools/tokens and adapt strategy
-- <nano:feedback> tags provide informational messages from your environment
-- <nano:warning> tags signal issues requiring immediate action or strategy change
-
-You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion."""
+You operate in a continuous loop. Each tool provides information that guides your next action."""
 
 
 class Agent:
@@ -98,7 +101,7 @@ class Agent:
         self.verbose = verbose
         self.log = log
         
-        self.tools = [SHELL_TOOL, PATCH_TOOL]
+        self.tools = [LIST_FILES_TOOL, FIND_FILES_TOOL, PATCH_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL]
         
         self.llm_kwargs = dict(
             model=model,
@@ -145,7 +148,7 @@ class Agent:
             if not msg.get("tool_calls"):
                 if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
                 # the agent hasn't made changes, so we remind it to operate autonomously
-                self._append({"role": "user", "content": warning("Use shell to explore or apply_patch to make changes. Do not stop working.")})
+                self._append({"role": "user", "content": warning("No tools called. Use grep_files to search for code or apply_patch to fix the issue.")})
                 continue
 
             for call in msg["tool_calls"]:  
@@ -158,11 +161,20 @@ class Agent:
                     self.remaining_tool_calls -= 1
                     continue
 
-                if name == "shell":
-                    output = shell(args=args, repo_root=repo_root, verbose=self.verbose)
+                if name == "list_files":
+                    output = list_files(args=args, repo_root=repo_root, verbose=self.verbose)
+                    
+                elif name == "find_files":
+                    output = find_files(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 elif name == "apply_patch":
                     output = apply_patch(args=args, repo_root=repo_root, verbose=self.verbose)
+                    
+                elif name == "grep_files":
+                    output = grep_files(args=args, repo_root=repo_root, verbose=self.verbose)
+                    
+                elif name == "read_lines":
+                    output = read_lines(args=args, repo_root=repo_root, verbose=self.verbose)
 
                 else:
                     output = warning(f"unknown tool: {name}")
@@ -218,13 +230,13 @@ class Agent:
         
         # ordered by priority
         if self.remaining_tokens < self.TOKENS_CRITICAL:
-            warning_message = warning("Token limit critical! Apply your best fix now.")
+            warning_message = warning("Token limit critical. Apply your best fix now.")
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
             warning_message = warning("Tokens low. Focus on the main issue only.")
         elif 1 < self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
             warning_message = warning(f"{self.remaining_tool_calls} tools left. Prioritize essential changes.")
         elif self.remaining_tool_calls == 1:
-            warning_message = warning("Last tool call! Make it count.")
+            warning_message = warning("Last tool call. Make it count.")
         else:
             warning_message = ""
             

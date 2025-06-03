@@ -14,16 +14,19 @@
 
 ## What it is
 
-`Nano` is a zero‑bloat wrapper that turns any tool-enabled LLM into a coding agent with two tools:
+`Nano` is a zero‑bloat wrapper that turns any tool-enabled LLM into a coding agent with five lightweight tools:
+
+```python
+
+list_files(path, pattern)       # explore directory structure
+find_files(pattern, path)       # locate files by name
+grep_files(pattern, paths)      # search code content with regex
+read_lines(file, start, end)    # read specific line ranges
+apply_patch({...})              # search/replace on one file
 
 ```
 
-shell(cmd)  # ls, cat, grep …
-apply_patch({...})  # search/replace on one file
-
-```
-
-> **Note:** `Nano` uses `rbash` (restricted bash) to confine the agent to its designated workspace. This, along with Nano's requirement of starting in a clean git repository, helps ensure its operations remain contained and predictable.
+> **Note:** `Nano` uses purpose-built tools instead of shell access for safety and predictability. This ensures consistent behavior across all environments and prevents arbitrary command execution.
 
 
 ---
@@ -40,6 +43,8 @@ These make agents more *capable*, but also more *opaque*. They're hard to analyz
 Inspired by [**The Bitter Lesson**](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), we believe that long-term performance comes not from encoding human intuitions, but from **letting models learn their own strategies**, even if they start out worse.  
 
 Effective reinforcement learning relies on a complete and unaltered log of agent interactions. `Nano` ensures this transparency by providing direct, non-obfuscated access to the raw reasoning, tool calls, and results, offering a precise record of what the model saw and did.
+
+The lightweight tools approach eliminates shell execution variability - every tool has predictable inputs, outputs, and behavior. This makes the agent's action space cleaner for both analysis and learning.
 
 That's what `Nano` tries to provide.
 
@@ -65,6 +70,11 @@ from transformers import AutoTokenizer
 
 agent = Agent(model="openrouter/qwen/qwen3-8b", thinking=False)
 agent.run("There is a bug in this repo...")
+
+# The agent will use tools like:
+# grep_files(pattern="class.*Error", paths=["src/"])
+# read_lines(file="src/main.py", start=150, end=180)
+# apply_patch(search="...", replace="...", file="src/main.py")
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
 tokens = tokenizer.apply_chat_template(
