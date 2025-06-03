@@ -135,23 +135,24 @@ This approach acknowledges that the agent may initially fail in certain situatio
 
 All baseline runs ranked by similarity score:
 
-| Rank | Version | Model | Similarity | Tokens | Tools | Date |
-|------|---------|-------|------------|--------|-------|------|
-| 1 | v3.2.0 | claude-sonnet-4 | 0.422 | 7079 | 17.0 | 2025-06-03 |
-| 2 | v3.2.0 | deepseek-chat | 0.413 | 3484 | 7.8 | 2025-06-03 |
-| 3 | v3.2.0 | gemini-2.5-flash-preview-05-20 | 0.405 | 3518 | 10.5 | 2025-06-03 |
-| 4 | v3.2.0 | gpt-4.1 | 0.402 | 5745 | 18.5 | 2025-06-03 |
-| 5 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
-| 6 | v3.2.0 | gemini-2.5-flash-preview-05-20 | 0.381 | 4091 | 11.6 | 2025-06-03 |
-| 7 | v3.2.0 | gpt-4.1-mini | 0.364 | 5433 | 21.1 | 2025-06-03 |
-| 8 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
-| 9 | v2.0.0 | gpt-4.1-mini | 0.335 | 7508 | 29.7 | 2025-05-25 |
-| 10 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
+| Rank | Version | Model | Similarity | Test Similarity | Tokens | Tools | Date |
+|------|---------|-------|------------|-----------------|--------|-------|------|
+| 1 | v3.2.0 | claude-sonnet-4-20250514 | 0.394 | 0.188 | 14746 | 41.5 | 2025-06-03 |
+| 2 | v3.2.0 | gpt-4.1 | 0.387 | 0.092 | 9778 | 35.7 | 2025-06-03 |
+| 3 | v3.2.0 | deepseek-chat | 0.366 | 0.000 | 3385 | 8.0 | 2025-06-03 |
+| 4 | v3.2.0 | gemini-2.5-flash-preview-05-20 | 0.362 | 0.000 | 4548 | 10.1 | 2025-06-03 |
+| 5 | v3.2.0 | gpt-4.1-mini | 0.350 | 0.017 | 7403 | 29.7 | 2025-06-03 |
+| 6 | v3.2.0 | llama-4-maverick | 0.255 | 0.000 | 4647 | 10.4 | 2025-06-04 |
+| 7 | v3.2.0 | gpt-4.1-nano | 0.188 | 0.000 | 8536 | 33.1 | 2025-06-04 |
+| 8 | v3.2.0 | devstral-small | 0.092 | 0.000 | 14604 | 13.0 | 2025-06-04 |
 
-*Updated automatically - showing top 10 of 17 total runs*
+*Updated automatically - showing top 10 of 8 total runs*
+
+**Note:** Prone to a lot of noise, small test set with few repetitions.
 
 **Key Metrics:**
 - **Similarity**: Average patch similarity score (ranked by this)
+- **Test Similarity**: Average test patch similarity score (0.000 for older baselines)
 - **Tokens**: Average token usage per problem
 - **Tools**: Average tool calls per problem
 

@@ -66,6 +66,8 @@ def generate_leaderboard_markdown() -> str:
         "",
         f"*Updated automatically - showing top 10 of {len(all_results)} total runs*",
         "",
+        "**Note:** Prone to a lot of noise, small test set with few repetitions.",
+        "",
         "**Key Metrics:**",
         "- **Similarity**: Average patch similarity score (ranked by this)",
         "- **Test Similarity**: Average test patch similarity score (0.000 for older baselines)",
