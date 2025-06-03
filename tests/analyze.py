@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import argparse
-import json
 import re
+import json
+import argparse
 from collections import defaultdict
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 
 def load_all_baselines(baselines_dir: Path) -> Dict[str, dict]:
@@ -69,22 +69,11 @@ def format_timestamp(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
 
 
-def print_group_summary(groups: Dict[Tuple[str, str], List[Tuple[str, dict]]], 
-                       show_details: bool = False, 
-                       sort_by: str = "version") -> None:
+def print_group_summary(groups: Dict[Tuple[str, str], List[Tuple[str, dict]]]) -> None:
     """Print summary of baseline groups."""
     
-    # Sort groups
-    if sort_by == "version":
-        sorted_groups = sorted(groups.items(), key=lambda x: (x[0][0], x[0][1]))
-    elif sort_by == "model":
-        sorted_groups = sorted(groups.items(), key=lambda x: (x[0][1], x[0][0]))
-    elif sort_by == "performance":
-        sorted_groups = sorted(groups.items(), 
-                             key=lambda x: max(baseline_data["metrics"]["success_rate"] for _, baseline_data in x[1]), 
-                             reverse=True)
-    else:
-        sorted_groups = list(groups.items())
+    # Sort by version, then model
+    sorted_groups = sorted(groups.items(), key=lambda x: (x[0][0], x[0][1]))
     
     print(f"📊 Found {len(groups)} baseline groups across {sum(len(baselines) for baselines in groups.values())} total baselines\n")
     
@@ -98,7 +87,8 @@ def print_group_summary(groups: Dict[Tuple[str, str], List[Tuple[str, dict]]],
         print(f"   🔧 Tools: {metrics['avg_tools']:.1f}±{metrics.get('tools_std', 0):.1f}")
         print(f"   📅 Count: {len(baselines)} baseline{'s' if len(baselines) > 1 else ''}")
         
-        if show_details and len(baselines) > 1:
+        # Always show history for groups with multiple baselines
+        if len(baselines) > 1:
             print(f"   📜 History:")
             for name, data in baselines:
                 parsed = parse_baseline_name(name)
@@ -207,12 +197,33 @@ def find_top_performers(groups: Dict[Tuple[str, str], List[Tuple[str, dict]]],
     direction_emoji = "🔝" if direction == "highest" else "🔻"
     print(f"{direction_emoji} Top 10 {direction} by {metric}")
     print()
-    print(f"{'Baseline':<35} {'Ver':<5} {metric.title():<8} {'Success':<7} {'Similar':<7} {'Tokens':<7} {'Tools':<5}")
-    print("-" * 85)
     
-    for name, version, model, metric_val, success, similarity, tokens, tools in all_baselines[:10]:
-        display_name = name[:32] + "..." if len(name) > 35 else name
-        print(f"{display_name:<35} v{version:<4} {metric_val:>7.3f}   {success:.3f}   {similarity:.3f}   {tokens:>5.0f}   {tools:>3.1f}")
+    # Clean up metric name for display
+    metric_display = metric.replace("avg_", "").replace("_", " ").title()
+    
+    # Decide which columns to show based on metric being ranked
+    if metric == "avg_similarity":
+        print(f"{'Baseline':<35} {'Ver':<5} {metric_display:<10} {'Success':<7} {'Tokens':<7} {'Tools':<5}")
+        print("-" * 75)
+        for name, version, model, metric_val, success, similarity, tokens, tools in all_baselines[:10]:
+            display_name = name[:32] + "..." if len(name) > 35 else name
+            print(f"{display_name:<35} v{version:<4} {metric_val:8.3f}  {success:6.3f}  {tokens:>6.0f}  {tools:>4.1f}")
+    elif metric == "success_rate":
+        print(f"{'Baseline':<35} {'Ver':<5} {metric_display:<10} {'Similar':<7} {'Tokens':<7} {'Tools':<5}")
+        print("-" * 75)
+        for name, version, model, metric_val, success, similarity, tokens, tools in all_baselines[:10]:
+            display_name = name[:32] + "..." if len(name) > 35 else name
+            print(f"{display_name:<35} v{version:<4} {metric_val:8.3f}  {similarity:6.3f}  {tokens:>6.0f}  {tools:>4.1f}")
+    else:
+        # For tokens/tools, show both success and similarity
+        print(f"{'Baseline':<35} {'Ver':<5} {metric_display:<8} {'Success':<7} {'Similar':<7} {'Tools' if metric == 'avg_tokens' else 'Tokens':<7}")
+        print("-" * 75)
+        for name, version, model, metric_val, success, similarity, tokens, tools in all_baselines[:10]:
+            display_name = name[:32] + "..." if len(name) > 35 else name
+            if metric == "avg_tokens":
+                print(f"{display_name:<35} v{version:<4} {metric_val:6.0f}    {success:6.3f}  {similarity:6.3f}  {tools:>4.1f}")
+            else:  # avg_tools
+                print(f"{display_name:<35} v{version:<4} {metric_val:6.1f}    {success:6.3f}  {similarity:6.3f}  {tokens:>6.0f}")
 
 
 def search_baselines(baselines: Dict[str, dict], query: str) -> List[Tuple[str, dict]]:
@@ -234,7 +245,6 @@ def main():
         epilog="""
 Examples:
   %(prog)s                            # Show summary of all baselines
-  %(prog)s --details                  # Show detailed history for each group
   %(prog)s --compare-models 3.1.1     # Compare models for specific version
   %(prog)s --evolution gpt-4.1-mini   # Show version evolution for model
   %(prog)s --highest success_rate      # Show highest success rates
@@ -242,12 +252,9 @@ Examples:
   %(prog)s --lowest avg_tokens         # Show most token-efficient baselines
   %(prog)s --lowest avg_tools          # Show least tool usage
   %(prog)s --search "deepseek"         # Search baselines by pattern
-  %(prog)s --sort performance          # Sort groups by performance
         """
     )
     
-    parser.add_argument("--details", action="store_true", 
-                       help="Show detailed history for each baseline group")
     parser.add_argument("--compare-models", metavar="VERSION",
                        help="Compare performance across models for specific version")
     parser.add_argument("--evolution", metavar="MODEL", 
@@ -258,22 +265,18 @@ Examples:
                        help="Show top 10 lowest by metric (success_rate, avg_similarity, avg_tokens, avg_tools)")
     parser.add_argument("--search", metavar="PATTERN",
                        help="Search baselines by name pattern (regex)")
-    parser.add_argument("--sort", choices=["version", "model", "performance"], 
-                       default="version", help="Sort groups by criteria")
-    parser.add_argument("--baselines-dir", type=Path, 
-                       default=Path(__file__).parent / "data" / "baselines",
-                       help="Directory containing baseline files")
     
     args = parser.parse_args()
     
-    if not args.baselines_dir.exists():
-        print(f"❌ Baselines directory not found: {args.baselines_dir}")
+    baselines_dir = Path(__file__).parent / "data" / "baselines"
+    if not baselines_dir.exists():
+        print(f"❌ Baselines directory not found: {baselines_dir}")
         return
     
     # Load all baselines
-    baselines = load_all_baselines(args.baselines_dir)
+    baselines = load_all_baselines(baselines_dir)
     if not baselines:
-        print(f"❌ No baseline files found in {args.baselines_dir}")
+        print(f"❌ No baseline files found in {baselines_dir}")
         return
     
     # Handle search
@@ -308,7 +311,7 @@ Examples:
         find_top_performers(groups, args.lowest, "lowest")
     else:
         # Default: show group summary
-        print_group_summary(groups, args.details, args.sort)
+        print_group_summary(groups)
 
 
 if __name__ == "__main__":
