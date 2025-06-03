@@ -18,22 +18,20 @@ def generate_leaderboard_markdown() -> str:
     if not baselines:
         return "<!-- No baseline files found -->"
     
-    groups = group_baselines(baselines)
-    
-    # Get top performers by key metrics
+    # Get all baselines, not grouped
     all_results = []
-    for (version, model), baseline_list in groups.items():
-        latest = baseline_list[-1][1]  # Most recent baseline
-        metrics = latest["metrics"]
+    for name, data in baselines.items():
+        parsed = parse_baseline_name(name)
+        metrics = data["metrics"]
         all_results.append({
-            "version": version,
-            "model": model,
-            "name": baseline_list[-1][0],
+            "version": parsed["version"],
+            "model": parsed["model"],
+            "name": name,
             "success_rate": metrics["success_rate"],
             "avg_similarity": metrics["avg_similarity"],
             "avg_tokens": metrics["avg_tokens"],
             "avg_tools": metrics["avg_tools"],
-            "created_at": latest.get("created_at", 0)
+            "created_at": data.get("created_at", 0)
         })
     
     # Sort by similarity (most important metric)
@@ -43,7 +41,7 @@ def generate_leaderboard_markdown() -> str:
     lines = [
         "## 🏆 Current Leaderboard",
         "",
-        "Latest performance across all nano-agent versions and models:",
+        "All baseline runs ranked by similarity score:",
         "",
         "| Rank | Version | Model | Similarity | Tokens | Tools | Date |",
         "|------|---------|-------|------------|--------|-------|------|"
@@ -53,9 +51,8 @@ def generate_leaderboard_markdown() -> str:
         # Format date
         date_str = format_timestamp(result["created_at"])[:10] if result["created_at"] else "N/A"
         
-        # Normalize and truncate model name if too long
-        model_normalized = result["model"].lower()
-        model_display = model_normalized[:15] + "..." if len(model_normalized) > 18 else model_normalized
+        # Normalize model name
+        model_display = result["model"].lower()
         
         lines.append(
             f"| {i} | v{result['version']} | {model_display} | "
@@ -65,7 +62,7 @@ def generate_leaderboard_markdown() -> str:
     
     lines.extend([
         "",
-        f"*Updated automatically with {len(all_results)} total configurations*",
+        f"*Updated automatically - showing top 10 of {len(all_results)} total runs*",
         "",
         "**Key Metrics:**",
         "- **Similarity**: Average patch similarity score (ranked by this)",

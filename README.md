@@ -129,24 +129,26 @@ This approach acknowledges that the agent may initially fail in certain situatio
 }
 ```
 
+
+
 ## 🏆 Current Leaderboard
 
-Latest performance across all nano-agent versions and models:
+All baseline runs ranked by similarity score:
 
 | Rank | Version | Model | Similarity | Tokens | Tools | Date |
 |------|---------|-------|------------|--------|-------|------|
-| 1 | v3.2.0 | deepseek-chat | 0.413 | 3484 | 7.8 | 2025-06-03 |
-| 2 | v3.2.0 | gpt-4.1 | 0.402 | 5745 | 18.5 | 2025-06-03 |
-| 3 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
-| 4 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
-| 5 | v5.0.0 | deepseek-chat | 0.332 | 5508 | 19.2 | 2025-06-03 |
-| 6 | v4.0.0 | deepseek-chat | 0.329 | 5361 | 25.6 | 2025-06-03 |
-| 7 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
-| 8 | v1.1.0 | gpt-4.1-mini | 0.317 | 8767 | 30.7 | 2025-05-25 |
-| 9 | v3.0.0 | gpt-4.1 | 0.315 | 9455 | 37.7 | 2025-05-28 |
-| 10 | v3.0.0 | gpt-4.1-mini | 0.286 | 9082 | 31.3 | 2025-05-28 |
+| 1 | v3.2.0 | claude-sonnet-4 | 0.422 | 7079 | 17.0 | 2025-06-03 |
+| 2 | v3.2.0 | deepseek-chat | 0.413 | 3484 | 7.8 | 2025-06-03 |
+| 3 | v3.2.0 | gemini-2.5-flash-preview-05-20 | 0.405 | 3518 | 10.5 | 2025-06-03 |
+| 4 | v3.2.0 | gpt-4.1 | 0.402 | 5745 | 18.5 | 2025-06-03 |
+| 5 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
+| 6 | v3.2.0 | gemini-2.5-flash-preview-05-20 | 0.381 | 4091 | 11.6 | 2025-06-03 |
+| 7 | v3.2.0 | gpt-4.1-mini | 0.364 | 5433 | 21.1 | 2025-06-03 |
+| 8 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
+| 9 | v2.0.0 | gpt-4.1-mini | 0.335 | 7508 | 29.7 | 2025-05-25 |
+| 10 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
 
-*Updated automatically with 15 total configurations*
+*Updated automatically - showing top 10 of 17 total runs*
 
 **Key Metrics:**
 - **Similarity**: Average patch similarity score (ranked by this)
