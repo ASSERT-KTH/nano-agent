@@ -138,13 +138,13 @@ All baseline runs ranked by similarity score:
 <table>
 <thead>
 <tr>
-<th>Rank</th>
-<th>Version</th>
+<th>#</th>
+<th>Ver</th>
 <th>Model</th>
-<th>Code Similarity</th>
-<th>Test Similarity</th>
-<th style='text-align: right'>Tokens (used/limit)</th>
-<th style='text-align: right'>Tools (used/limit)</th>
+<th>Code Sim</th>
+<th>Test Sim</th>
+<th style='text-align: right'>Tokens</th>
+<th style='text-align: right'>Tools</th>
 </tr>
 </thead>
 <tbody>
@@ -228,8 +228,8 @@ All baseline runs ranked by similarity score:
 **Note:** Prone to a lot of noise, small test set with few repetitions.
 
 **Key Metrics:**
-- **Code Similarity**: Average patch similarity score (ranked by this)
-- **Test Similarity**: Average test patch similarity score
-- **Token utilization**: Average tokens used per problem / limit
-- **Tool utilization**: Average tool calls per problem / limit
+- **Code Sim**: Average patch similarity score (ranked by this)
+- **Test Sim**: Average test patch similarity score
+- **Tokens**: Average tokens used per problem / limit
+- **Tools**: Average tool calls per problem / limit
 
