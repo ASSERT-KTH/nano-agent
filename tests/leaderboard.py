@@ -21,29 +21,45 @@ def generate_leaderboard_markdown() -> str:
     for name, data in baselines.items():
         parsed = parse_baseline_name(name)
         metrics = data["metrics"]
+        config = data["config"]
+        
         all_results.append({
             "version": parsed["version"],
             "model": parsed["model"],
             "name": name,
             "success_rate": metrics["success_rate"],
             "avg_similarity": metrics["avg_similarity"],
-            "avg_test_similarity": metrics.get("avg_test_similarity", 0.0),
+            "avg_test_similarity": metrics["avg_test_similarity"],
             "avg_tokens": metrics["avg_tokens"],
+            "token_limit": config["token_limit"],
             "avg_tools": metrics["avg_tools"],
-            "created_at": data.get("created_at", 0)
+            "tool_limit": config["tool_limit"],
+            "created_at": data["created_at"]
         })
     
     # Sort by similarity (most important metric)
     all_results.sort(key=lambda x: x["avg_similarity"], reverse=True)
     
-    # Generate markdown
+    # Generate HTML table for precise alignment
     lines = [
         "## 🏆 Current Leaderboard",
         "",
         "All baseline runs ranked by similarity score:",
         "",
-        "| Rank | Version | Model | Code Similarity | Test Similarity | Tokens | Tools | Date |",
-        "|------|---------|-------|-----------------|-----------------|--------|-------|------|"
+        "<table>",
+        "<thead>",
+        "<tr>",
+        "<th>Rank</th>",
+        "<th>Version</th>", 
+        "<th>Model</th>",
+        "<th>Code Similarity</th>",
+        "<th>Test Similarity</th>",
+        "<th style='text-align: right'>Tokens (used/limit)</th>",
+        "<th style='text-align: right'>Tools (used/limit)</th>",
+        "<th>Date</th>",
+        "</tr>",
+        "</thead>",
+        "<tbody>"
     ]
     
     for i, result in enumerate(all_results[:10], 1):
@@ -53,12 +69,26 @@ def generate_leaderboard_markdown() -> str:
         # Normalize model name
         model_display = result["model"].lower()
         
-        lines.append(
-            f"| {i} | v{result['version']} | {model_display} | "
-            f"{result['avg_similarity']:.3f} | "
-            f"{result['avg_test_similarity']:.3f} | "
-            f"{result['avg_tokens']:.0f} | {result['avg_tools']:.1f} | {date_str} |"
-        )
+        # Format numbers
+        tokens_used = int(result['avg_tokens'])
+        tokens_limit = result['token_limit']
+        tools_used = result['avg_tools']
+        
+        lines.append("<tr>")
+        lines.append(f"<td>{i}</td>")
+        lines.append(f"<td>v{result['version']}</td>")
+        lines.append(f"<td>{model_display}</td>")
+        lines.append(f"<td>{result['avg_similarity']:.3f}</td>")
+        lines.append(f"<td>{result['avg_test_similarity']:.3f}</td>")
+        lines.append(f"<td style='text-align: right'>{tokens_used:,} / {tokens_limit:,}</td>")
+        lines.append(f"<td style='text-align: right'>{tools_used:.1f} / {result['tool_limit']}</td>")
+        lines.append(f"<td>{date_str}</td>")
+        lines.append("</tr>")
+    
+    lines.extend([
+        "</tbody>",
+        "</table>"
+    ])
     
     lines.extend([
         "",
@@ -67,10 +97,10 @@ def generate_leaderboard_markdown() -> str:
         "**Note:** Prone to a lot of noise, small test set with few repetitions.",
         "",
         "**Key Metrics:**",
-        "- **Similarity**: Average patch similarity score (ranked by this)",
-        "- **Test Similarity**: Average test patch similarity score (0.000 for older baselines)",
-        "- **Tokens**: Average token usage per problem", 
-        "- **Tools**: Average tool calls per problem",
+        "- **Code Similarity**: Average patch similarity score (ranked by this)",
+        "- **Test Similarity**: Average test patch similarity score",
+        "- **Token utilization**: Average tokens used per problem / limit", 
+        "- **Tool utilization**: Average tool calls per problem / limit",
         ""
     ])
     
