@@ -135,8 +135,8 @@ This approach acknowledges that the agent may initially fail in certain situatio
 
 All baseline runs ranked by similarity score:
 
-| Rank | Version | Model | Similarity | Test Similarity | Tokens | Tools | Date |
-|------|---------|-------|------------|-----------------|--------|-------|------|
+| Rank | Version | Model | Code Similarity | Test Similarity | Tokens | Tools | Date |
+|------|---------|-------|-----------------|-----------------|--------|-------|------|
 | 1 | v3.2.0 | claude-sonnet-4-20250514 | 0.394 | 0.188 | 14746 | 41.5 | 2025-06-03 |
 | 2 | v3.2.0 | gpt-4.1 | 0.387 | 0.092 | 9778 | 35.7 | 2025-06-03 |
 | 3 | v3.2.0 | deepseek-chat | 0.366 | 0.000 | 3385 | 8.0 | 2025-06-03 |

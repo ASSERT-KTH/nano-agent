@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
-from analyze import load_all_baselines, group_baselines, parse_baseline_name, format_timestamp
+from analyze import load_all_baselines, parse_baseline_name, format_timestamp
 
 
 def generate_leaderboard_markdown() -> str:
@@ -44,8 +42,8 @@ def generate_leaderboard_markdown() -> str:
         "",
         "All baseline runs ranked by similarity score:",
         "",
-        "| Rank | Version | Model | Similarity | Test Similarity | Tokens | Tools | Date |",
-        "|------|---------|-------|------------|-----------------|--------|-------|------|"
+        "| Rank | Version | Model | Code Similarity | Test Similarity | Tokens | Tools | Date |",
+        "|------|---------|-------|-----------------|-----------------|--------|-------|------|"
     ]
     
     for i, result in enumerate(all_results[:10], 1):
