@@ -143,8 +143,8 @@ All baseline runs ranked by similarity score:
 <th>Model</th>
 <th>Code Sim</th>
 <th>Test Sim</th>
-<th style='text-align: right'>Tokens</th>
-<th style='text-align: right'>Tools</th>
+<th style='text-align: right !important' align='right'>Tokens</th>
+<th style='text-align: right !important' align='right'>Tools</th>
 </tr>
 </thead>
 <tbody>
@@ -154,8 +154,8 @@ All baseline runs ranked by similarity score:
 <td>claude-sonnet-4-20250514</td>
 <td>0.394</td>
 <td>0.188</td>
-<td style='text-align: right'>14,746 / 16,384</td>
-<td style='text-align: right'>41.5 / 100</td>
+<td style='text-align: right !important' align='right'>14,746 / 16,384</td>
+<td style='text-align: right !important' align='right'>41.5 / 100</td>
 </tr>
 <tr>
 <td>2</td>
@@ -163,8 +163,8 @@ All baseline runs ranked by similarity score:
 <td>gpt-4.1</td>
 <td>0.387</td>
 <td>0.092</td>
-<td style='text-align: right'>9,777 / 16,384</td>
-<td style='text-align: right'>35.7 / 100</td>
+<td style='text-align: right !important' align='right'>9,777 / 16,384</td>
+<td style='text-align: right !important' align='right'>35.7 / 100</td>
 </tr>
 <tr>
 <td>3</td>
@@ -172,8 +172,8 @@ All baseline runs ranked by similarity score:
 <td>gemini-2.5-flash-preview-05-20</td>
 <td>0.362</td>
 <td>0.000</td>
-<td style='text-align: right'>4,547 / 16,384</td>
-<td style='text-align: right'>10.1 / 100</td>
+<td style='text-align: right !important' align='right'>4,547 / 16,384</td>
+<td style='text-align: right !important' align='right'>10.1 / 100</td>
 </tr>
 <tr>
 <td>4</td>
@@ -181,8 +181,8 @@ All baseline runs ranked by similarity score:
 <td>gpt-4.1-mini</td>
 <td>0.350</td>
 <td>0.017</td>
-<td style='text-align: right'>7,403 / 16,384</td>
-<td style='text-align: right'>29.7 / 100</td>
+<td style='text-align: right !important' align='right'>7,403 / 16,384</td>
+<td style='text-align: right !important' align='right'>29.7 / 100</td>
 </tr>
 <tr>
 <td>5</td>
@@ -190,8 +190,8 @@ All baseline runs ranked by similarity score:
 <td>deepseek-chat</td>
 <td>0.336</td>
 <td>0.011</td>
-<td style='text-align: right'>3,297 / 16,384</td>
-<td style='text-align: right'>7.5 / 100</td>
+<td style='text-align: right !important' align='right'>3,297 / 16,384</td>
+<td style='text-align: right !important' align='right'>7.5 / 100</td>
 </tr>
 <tr>
 <td>6</td>
@@ -199,8 +199,8 @@ All baseline runs ranked by similarity score:
 <td>llama-4-maverick</td>
 <td>0.255</td>
 <td>0.000</td>
-<td style='text-align: right'>4,647 / 16,384</td>
-<td style='text-align: right'>10.4 / 100</td>
+<td style='text-align: right !important' align='right'>4,647 / 16,384</td>
+<td style='text-align: right !important' align='right'>10.4 / 100</td>
 </tr>
 <tr>
 <td>7</td>
@@ -208,8 +208,8 @@ All baseline runs ranked by similarity score:
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
 <td>0.000</td>
-<td style='text-align: right'>8,536 / 16,384</td>
-<td style='text-align: right'>33.1 / 100</td>
+<td style='text-align: right !important' align='right'>8,536 / 16,384</td>
+<td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
 <td>8</td>
@@ -217,8 +217,8 @@ All baseline runs ranked by similarity score:
 <td>devstral-small</td>
 <td>0.092</td>
 <td>0.000</td>
-<td style='text-align: right'>14,603 / 16,384</td>
-<td style='text-align: right'>13.0 / 100</td>
+<td style='text-align: right !important' align='right'>14,603 / 16,384</td>
+<td style='text-align: right !important' align='right'>13.0 / 100</td>
 </tr>
 </tbody>
 </table>

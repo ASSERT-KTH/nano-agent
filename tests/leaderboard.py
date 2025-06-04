@@ -54,8 +54,8 @@ def generate_leaderboard_markdown() -> str:
         "<th>Model</th>",
         "<th>Code Sim</th>",
         "<th>Test Sim</th>",
-        "<th style='text-align: right'>Tokens</th>",
-        "<th style='text-align: right'>Tools</th>",
+        "<th style='text-align: right !important' align='right'>Tokens</th>",
+        "<th style='text-align: right !important' align='right'>Tools</th>",
         "</tr>",
         "</thead>",
         "<tbody>"
@@ -79,8 +79,8 @@ def generate_leaderboard_markdown() -> str:
         lines.append(f"<td>{model_display}</td>")
         lines.append(f"<td>{result['avg_similarity']:.3f}</td>")
         lines.append(f"<td>{result['avg_test_similarity']:.3f}</td>")
-        lines.append(f"<td style='text-align: right'>{tokens_used:,} / {tokens_limit:,}</td>")
-        lines.append(f"<td style='text-align: right'>{tools_used:.1f} / {result['tool_limit']}</td>")
+        lines.append(f"<td style='text-align: right !important' align='right'>{tokens_used:,} / {tokens_limit:,}</td>")
+        lines.append(f"<td style='text-align: right !important' align='right'>{tools_used:.1f} / {result['tool_limit']}</td>")
         lines.append("</tr>")
     
     lines.extend([
