@@ -145,7 +145,6 @@ All baseline runs ranked by similarity score:
 <th>Test Similarity</th>
 <th style='text-align: right'>Tokens (used/limit)</th>
 <th style='text-align: right'>Tools (used/limit)</th>
-<th>Date</th>
 </tr>
 </thead>
 <tbody>
@@ -157,7 +156,6 @@ All baseline runs ranked by similarity score:
 <td>0.188</td>
 <td style='text-align: right'>14,746 / 16,384</td>
 <td style='text-align: right'>41.5 / 100</td>
-<td>2025-06-03</td>
 </tr>
 <tr>
 <td>2</td>
@@ -167,7 +165,6 @@ All baseline runs ranked by similarity score:
 <td>0.092</td>
 <td style='text-align: right'>9,777 / 16,384</td>
 <td style='text-align: right'>35.7 / 100</td>
-<td>2025-06-03</td>
 </tr>
 <tr>
 <td>3</td>
@@ -177,7 +174,6 @@ All baseline runs ranked by similarity score:
 <td>0.000</td>
 <td style='text-align: right'>4,547 / 16,384</td>
 <td style='text-align: right'>10.1 / 100</td>
-<td>2025-06-03</td>
 </tr>
 <tr>
 <td>4</td>
@@ -187,7 +183,6 @@ All baseline runs ranked by similarity score:
 <td>0.017</td>
 <td style='text-align: right'>7,403 / 16,384</td>
 <td style='text-align: right'>29.7 / 100</td>
-<td>2025-06-03</td>
 </tr>
 <tr>
 <td>5</td>
@@ -197,7 +192,6 @@ All baseline runs ranked by similarity score:
 <td>0.011</td>
 <td style='text-align: right'>3,297 / 16,384</td>
 <td style='text-align: right'>7.5 / 100</td>
-<td>2025-06-04</td>
 </tr>
 <tr>
 <td>6</td>
@@ -207,7 +201,6 @@ All baseline runs ranked by similarity score:
 <td>0.000</td>
 <td style='text-align: right'>4,647 / 16,384</td>
 <td style='text-align: right'>10.4 / 100</td>
-<td>2025-06-04</td>
 </tr>
 <tr>
 <td>7</td>
@@ -217,7 +210,6 @@ All baseline runs ranked by similarity score:
 <td>0.000</td>
 <td style='text-align: right'>8,536 / 16,384</td>
 <td style='text-align: right'>33.1 / 100</td>
-<td>2025-06-04</td>
 </tr>
 <tr>
 <td>8</td>
@@ -227,7 +219,6 @@ All baseline runs ranked by similarity score:
 <td>0.000</td>
 <td style='text-align: right'>14,603 / 16,384</td>
 <td style='text-align: right'>13.0 / 100</td>
-<td>2025-06-04</td>
 </tr>
 </tbody>
 </table>
