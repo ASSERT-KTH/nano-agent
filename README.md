@@ -169,6 +169,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>3</td>
 <td>v3.2.0</td>
+<td>gemini-2.5-pro-preview</td>
+<td>0.370</td>
+<td>0.034</td>
+<td style='text-align: right !important' align='right'>6,008 / 16,384</td>
+<td style='text-align: right !important' align='right'>13.6 / 100</td>
+</tr>
+<tr>
+<td>4</td>
+<td>v3.2.0</td>
 <td>gemini-2.5-flash-preview-05-20</td>
 <td>0.362</td>
 <td>0.000</td>
@@ -176,7 +185,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>10.1 / 100</td>
 </tr>
 <tr>
-<td>4</td>
+<td>5</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-mini</td>
 <td>0.350</td>
@@ -185,7 +194,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>29.7 / 100</td>
 </tr>
 <tr>
-<td>5</td>
+<td>6</td>
 <td>v3.2.0</td>
 <td>deepseek-chat</td>
 <td>0.336</td>
@@ -194,7 +203,16 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>7.5 / 100</td>
 </tr>
 <tr>
-<td>6</td>
+<td>7</td>
+<td>v3.2.0</td>
+<td>qwen-2.5-72b-instruct</td>
+<td>0.272</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>5,873 / 16,384</td>
+<td style='text-align: right !important' align='right'>35.1 / 100</td>
+</tr>
+<tr>
+<td>8</td>
 <td>v3.2.0</td>
 <td>llama-4-maverick</td>
 <td>0.255</td>
@@ -203,7 +221,16 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>10.4 / 100</td>
 </tr>
 <tr>
-<td>7</td>
+<td>9</td>
+<td>v3.2.0</td>
+<td>qwen3-32b-thinking</td>
+<td>0.220</td>
+<td>0.005</td>
+<td style='text-align: right !important' align='right'>8,011 / 16,384</td>
+<td style='text-align: right !important' align='right'>6.5 / 100</td>
+</tr>
+<tr>
+<td>10</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
@@ -212,7 +239,16 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
-<td>8</td>
+<td>11</td>
+<td>v3.2.0</td>
+<td>qwen3-14b-thinking</td>
+<td>0.180</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,976 / 16,384</td>
+<td style='text-align: right !important' align='right'>7.7 / 100</td>
+</tr>
+<tr>
+<td>12</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>

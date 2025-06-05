@@ -112,17 +112,26 @@ class Agent:
                 top_k=top_k,
                 min_p=min_p,
                 chat_template_kwargs={"enable_thinking": thinking},
+                extra_body={"enable_thinking": thinking}
             ))
 
     @property
     def token_usage(self):
-        """Return the total token count used (accurate up to the last tool call)."""
-        return self.token_limit - getattr(self, "remaining_tokens", self.token_limit)
+        """
+        This is highly dependent on the endpoint and model being used. Some endpoints include tool tokens, some don't.
+        Litellm's token counter is designed to accurately reflect the priced tokens, but not for the actual amount of tokens used.
+        This will therefore sometimes be accurate, and sometimes underestimate. So we account for this in our token buffer.
+        """
+        litellm = _get_litellm()
+        return litellm.token_counter(self.llm_kwargs["model"], messages=self.messages, tools=self.tools)
     
     @property
-    def tool_usage(self):
-        """Return the number of tool calls made."""
-        return self.tool_limit - getattr(self, "remaining_tool_calls", self.tool_limit)
+    def remaining_tokens(self):
+        return self.token_limit - self.token_usage
+    
+    @property
+    def remaining_tool_calls(self):
+        return self.tool_limit - self.tool_usage
         
     def run(self, task: str, repo_root: Optional[str|Path] = None) -> str:
         """
@@ -156,7 +165,7 @@ class Agent:
                 except json.JSONDecodeError as e:
                     output = warning(f"Malformed tool arguments JSON: {e}")
                     self._tool_reply(call, output)
-                    self.remaining_tool_calls -= 1
+                    self.tool_usage += 1
                     continue
 
                 if name == "shell":
@@ -169,11 +178,11 @@ class Agent:
                     output = warning(f"unknown tool: {name}")
             
                 self._tool_reply(call, output)
-                self.remaining_tool_calls -= 1
+                self.tool_usage += 1
 
         unified_diff = git_diff(repo_root)
         if self.log: self.diff_file.open("w").write(unified_diff)
-        if self.verbose: print(f"\nFinal token count: {self.token_usage}")
+        if self.verbose: print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}")
         return unified_diff
 
     def _chat(self) -> dict:
@@ -194,13 +203,6 @@ class Agent:
         msg = reply["choices"][0]["message"].model_dump()
 
         self._append(msg)
-
-        # Calculate actual token usage including reasoning tokens for thinking models (not included in total_tokens)
-        usage = reply["usage"].model_dump()
-        normal_tokens = usage["total_tokens"]
-        completion_info = usage.get("completion_tokens_details", {}) or {}
-        reasoning_tokens = completion_info.get("reasoning_tokens", 0)
-        self.remaining_tokens = self.token_limit - normal_tokens - reasoning_tokens
 
         return msg
 
@@ -262,8 +264,8 @@ class Agent:
     def _reset(self):
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         
-        self.remaining_tool_calls = self.tool_limit
-        self.remaining_tokens = self.token_limit  # will include the messages after the first _chat
+        # token usage is a property and thus behaves exactly like a variable
+        self.tool_usage = 0
 
         if self.verbose:
             self._print_header()

@@ -65,7 +65,7 @@ def generate_leaderboard_markdown(test_set: str = "lite") -> str:
         "<tbody>"
     ]
     
-    for i, result in enumerate(all_results[:10], 1):
+    for i, result in enumerate(all_results, 1):
         # Normalize model name
         model_display = result["model"].lower()
         
