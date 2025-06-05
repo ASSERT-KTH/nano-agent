@@ -169,7 +169,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>3</td>
 <td>v3.2.0</td>
-<td>gemini-2.5-pro-preview</td>
+<td>gemini-2.5-pro-preview-thinking</td>
 <td>0.370</td>
 <td>0.034</td>
 <td style='text-align: right !important' align='right'>6,008 / 16,384</td>
@@ -232,6 +232,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>10</td>
 <td>v3.2.0</td>
+<td>qwen3-235b-a22b-thinking</td>
+<td>0.199</td>
+<td>0.005</td>
+<td style='text-align: right !important' align='right'>10,988 / 16,384</td>
+<td style='text-align: right !important' align='right'>7.2 / 100</td>
+</tr>
+<tr>
+<td>11</td>
+<td>v3.2.0</td>
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
 <td>0.000</td>
@@ -239,7 +248,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
-<td>11</td>
+<td>12</td>
 <td>v3.2.0</td>
 <td>qwen3-14b-thinking</td>
 <td>0.180</td>
@@ -248,7 +257,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>7.7 / 100</td>
 </tr>
 <tr>
-<td>12</td>
+<td>13</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>
