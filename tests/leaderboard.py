@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-
+import argparse
 from pathlib import Path
 
-from analyze import load_all_baselines, parse_baseline_name, format_timestamp
+from analyze import load_all_baselines, parse_baseline_name
 
 
-def generate_leaderboard_markdown() -> str:
-    """Generate leaderboard markdown content."""
+def generate_leaderboard_markdown(test_set: str = "lite") -> str:
+    """Generate leaderboard markdown content for a specific test set."""
     baselines_dir = Path(__file__).parent / "data" / "baselines"
     
     if not baselines_dir.exists():
@@ -16,12 +16,16 @@ def generate_leaderboard_markdown() -> str:
     if not baselines:
         return "<!-- No baseline files found -->"
     
-    # Get all baselines, not grouped
+    # Get all baselines, filtered by test set
     all_results = []
     for name, data in baselines.items():
         parsed = parse_baseline_name(name)
         metrics = data["metrics"]
         config = data["config"]
+        
+        # Filter by test set
+        if config.get("test_set") != test_set:
+            continue
         
         all_results.append({
             "version": parsed["version"],
@@ -44,7 +48,7 @@ def generate_leaderboard_markdown() -> str:
     lines = [
         "## 🏆 Current Leaderboard",
         "",
-        "All baseline runs ranked by similarity score:",
+        f"Performance on SWE-bench {test_set.title()} subset, ranked by code similarity",
         "",
         "<table>",
         "<thead>",
@@ -62,9 +66,6 @@ def generate_leaderboard_markdown() -> str:
     ]
     
     for i, result in enumerate(all_results[:10], 1):
-        # Format date
-        date_str = format_timestamp(result["created_at"])[:10] if result["created_at"] else "N/A"
-        
         # Normalize model name
         model_display = result["model"].lower()
         
@@ -90,15 +91,15 @@ def generate_leaderboard_markdown() -> str:
     
     lines.extend([
         "",
-        f"*Updated automatically - showing top 10 of {len(all_results)} total runs*",
+        "**How it works:**",
+        "- **Input**: A GitHub repository containing a bug with a known ground truth solution",
+        "- **Task**: Nano provides models with tools to explore the codebase and generate a fix", 
+        "- **Output**: Nano produces a unified git diff containing all proposed code changes",
+        "- **Evaluation**: We measure how closely the model's solution matches the ground truth using:",
+        "  - **Code Similarity**: How well the fix matches the actual bug fix (primary ranking metric)",
+        "  - **Test Similarity**: How well any test changes match the ground truth test updates",
         "",
         "**Note:** Prone to a lot of noise, small test set with few repetitions.",
-        "",
-        "**Key Metrics:**",
-        "- **Code Sim**: Average patch similarity score (ranked by this)",
-        "- **Test Sim**: Average test patch similarity score",
-        "- **Tokens**: Average tokens used per problem / limit", 
-        "- **Tools**: Average tool calls per problem / limit",
         ""
     ])
     
@@ -150,13 +151,9 @@ def update_readme_leaderboard() -> bool:
     return True
 
 
-def main():
-    """CLI entry point."""
-    import argparse
-    
+def main():    
     parser = argparse.ArgumentParser(description="Update nano-agent leaderboard in README.md")
-    parser.add_argument("--dry-run", action="store_true", 
-                       help="Print leaderboard without updating README")
+    parser.add_argument("--dry-run", action="store_true", help="Print leaderboard without updating README")
     
     args = parser.parse_args()
     

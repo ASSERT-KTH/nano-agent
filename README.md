@@ -133,7 +133,7 @@ This approach acknowledges that the agent may initially fail in certain situatio
 
 ## 🏆 Current Leaderboard
 
-All baseline runs ranked by similarity score:
+Performance on SWE-bench Lite subset, ranked by code similarity
 
 <table>
 <thead>
@@ -223,13 +223,13 @@ All baseline runs ranked by similarity score:
 </tbody>
 </table>
 
-*Updated automatically - showing top 10 of 8 total runs*
+**How it works:**
+- **Input**: A GitHub repository containing a bug with a known ground truth solution
+- **Task**: Nano provides models with tools to explore the codebase and generate a fix
+- **Output**: Nano produces a unified git diff containing all proposed code changes
+- **Evaluation**: We measure how closely the model's solution matches the ground truth using:
+  - **Code Similarity**: How well the fix matches the actual bug fix (primary ranking metric)
+  - **Test Similarity**: How well any test changes match the ground truth test updates
 
 **Note:** Prone to a lot of noise, small test set with few repetitions.
-
-**Key Metrics:**
-- **Code Sim**: Average patch similarity score (ranked by this)
-- **Test Sim**: Average test patch similarity score
-- **Tokens**: Average tokens used per problem / limit
-- **Tools**: Average tool calls per problem / limit
 
