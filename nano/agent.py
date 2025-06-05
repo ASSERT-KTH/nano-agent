@@ -6,8 +6,8 @@ from datetime import datetime
 
 from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning
 from nano.tools import (
-    list_files, find_files, apply_patch, grep_files, read_lines,
-    LIST_FILES_TOOL, FIND_FILES_TOOL, PATCH_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL
+    apply_patch, list_files, find_files, grep_files, read_lines,
+    PATCH_TOOL, LIST_FILES_TOOL, FIND_FILES_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL
 )
 
 # litellm is very slow to import, so we lazy load it
@@ -101,7 +101,7 @@ class Agent:
         self.verbose = verbose
         self.log = log
         
-        self.tools = [LIST_FILES_TOOL, FIND_FILES_TOOL, PATCH_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL]
+        self.tools = [PATCH_TOOL, LIST_FILES_TOOL, FIND_FILES_TOOL, GREP_FILES_TOOL, READ_LINES_TOOL]
         
         self.llm_kwargs = dict(
             model=model,

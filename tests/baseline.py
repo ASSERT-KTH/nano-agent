@@ -98,9 +98,9 @@ def compare_baselines(current: dict, baseline: dict, current_config: dict = None
     print(f"\n  📈 Metrics:")
     has_std = "success_std" in current_m
     
-    for metric in ["success_rate", "avg_similarity", "avg_tokens", "avg_tools"]:
-        base_val = baseline_m[metric]
-        curr_val = current_m[metric]
+    for metric in ["success_rate", "avg_similarity", "avg_test_similarity", "avg_tokens", "avg_tools"]:
+        base_val = baseline_m.get(metric, 0.0) if metric == "avg_test_similarity" else baseline_m[metric]
+        curr_val = current_m.get(metric, 0.0) if metric == "avg_test_similarity" else current_m[metric]
         diff = curr_val - base_val
         
         base_std = baseline_m.get(f"{metric.replace('avg_', '')}_std", 0)

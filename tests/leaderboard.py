@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-
-import re
+import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple
 
-from analyze import load_all_baselines, group_baselines, parse_baseline_name, format_timestamp
+from analyze import load_all_baselines, parse_baseline_name
 
 
-def generate_leaderboard_markdown() -> str:
-    """Generate leaderboard markdown content."""
+def generate_leaderboard_markdown(test_set: str = "lite") -> str:
+    """Generate leaderboard markdown content for a specific test set."""
     baselines_dir = Path(__file__).parent / "data" / "baselines"
     
     if not baselines_dir.exists():
@@ -18,59 +16,90 @@ def generate_leaderboard_markdown() -> str:
     if not baselines:
         return "<!-- No baseline files found -->"
     
-    groups = group_baselines(baselines)
-    
-    # Get top performers by key metrics
+    # Get all baselines, filtered by test set
     all_results = []
-    for (version, model), baseline_list in groups.items():
-        latest = baseline_list[-1][1]  # Most recent baseline
-        metrics = latest["metrics"]
+    for name, data in baselines.items():
+        parsed = parse_baseline_name(name)
+        metrics = data["metrics"]
+        config = data["config"]
+        
+        # Filter by test set
+        if config.get("test_set") != test_set:
+            continue
+        
         all_results.append({
-            "version": version,
-            "model": model,
-            "name": baseline_list[-1][0],
+            "version": parsed["version"],
+            "model": parsed["model"],
+            "name": name,
             "success_rate": metrics["success_rate"],
             "avg_similarity": metrics["avg_similarity"],
+            "avg_test_similarity": metrics["avg_test_similarity"],
             "avg_tokens": metrics["avg_tokens"],
+            "token_limit": config["token_limit"],
             "avg_tools": metrics["avg_tools"],
-            "created_at": latest.get("created_at", 0)
+            "tool_limit": config["tool_limit"],
+            "created_at": data["created_at"]
         })
     
     # Sort by similarity (most important metric)
     all_results.sort(key=lambda x: x["avg_similarity"], reverse=True)
     
-    # Generate markdown
+    # Generate HTML table for precise alignment
     lines = [
         "## 🏆 Current Leaderboard",
         "",
-        "Latest performance across all nano-agent versions and models:",
+        f"Performance on SWE-bench {test_set.title()} subset, ranked by code similarity",
         "",
-        "| Rank | Version | Model | Similarity | Tokens | Tools | Date |",
-        "|------|---------|-------|------------|--------|-------|------|"
+        "<table>",
+        "<thead>",
+        "<tr>",
+        "<th>#</th>",
+        "<th>Ver</th>", 
+        "<th>Model</th>",
+        "<th>Code Sim</th>",
+        "<th>Test Sim</th>",
+        "<th style='text-align: right !important' align='right'>Tokens</th>",
+        "<th style='text-align: right !important' align='right'>Tools</th>",
+        "</tr>",
+        "</thead>",
+        "<tbody>"
     ]
     
     for i, result in enumerate(all_results[:10], 1):
-        # Format date
-        date_str = format_timestamp(result["created_at"])[:10] if result["created_at"] else "N/A"
+        # Normalize model name
+        model_display = result["model"].lower()
         
-        # Normalize and truncate model name if too long
-        model_normalized = result["model"].lower()
-        model_display = model_normalized[:15] + "..." if len(model_normalized) > 18 else model_normalized
+        # Format numbers
+        tokens_used = int(result['avg_tokens'])
+        tokens_limit = result['token_limit']
+        tools_used = result['avg_tools']
         
-        lines.append(
-            f"| {i} | v{result['version']} | {model_display} | "
-            f"{result['avg_similarity']:.3f} | "
-            f"{result['avg_tokens']:.0f} | {result['avg_tools']:.1f} | {date_str} |"
-        )
+        lines.append("<tr>")
+        lines.append(f"<td>{i}</td>")
+        lines.append(f"<td>v{result['version']}</td>")
+        lines.append(f"<td>{model_display}</td>")
+        lines.append(f"<td>{result['avg_similarity']:.3f}</td>")
+        lines.append(f"<td>{result['avg_test_similarity']:.3f}</td>")
+        lines.append(f"<td style='text-align: right !important' align='right'>{tokens_used:,} / {tokens_limit:,}</td>")
+        lines.append(f"<td style='text-align: right !important' align='right'>{tools_used:.1f} / {result['tool_limit']}</td>")
+        lines.append("</tr>")
+    
+    lines.extend([
+        "</tbody>",
+        "</table>"
+    ])
     
     lines.extend([
         "",
-        f"*Updated automatically with {len(all_results)} total configurations*",
+        "**How it works:**",
+        "- **Input**: A GitHub repository containing a bug with a known ground truth solution",
+        "- **Task**: Nano provides models with tools to explore the codebase and generate a fix", 
+        "- **Output**: Nano produces a unified git diff containing all proposed code changes",
+        "- **Evaluation**: We measure how closely the model's solution matches the ground truth using:",
+        "  - **Code Similarity**: How well the fix matches the actual bug fix (primary ranking metric)",
+        "  - **Test Similarity**: How well any test changes match the ground truth test updates",
         "",
-        "**Key Metrics:**",
-        "- **Similarity**: Average patch similarity score (ranked by this)",
-        "- **Tokens**: Average token usage per problem", 
-        "- **Tools**: Average tool calls per problem",
+        "**Note:** Prone to a lot of noise, small test set with few repetitions.",
         ""
     ])
     
@@ -122,13 +151,9 @@ def update_readme_leaderboard() -> bool:
     return True
 
 
-def main():
-    """CLI entry point."""
-    import argparse
-    
+def main():    
     parser = argparse.ArgumentParser(description="Update nano-agent leaderboard in README.md")
-    parser.add_argument("--dry-run", action="store_true", 
-                       help="Print leaderboard without updating README")
+    parser.add_argument("--dry-run", action="store_true", help="Print leaderboard without updating README")
     
     args = parser.parse_args()
     

@@ -1,7 +1,25 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from nano.utils import feedback, warning
+
+
+PATCH_TOOL = {
+    "type": "function", 
+    "function": {
+        "name": "apply_patch",
+        "description": "Replace exact text in file. Search string must be unique. Include 3-5 lines of context. If patch fails, use grep to verify uniqueness before retrying.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "search": {"type": "string", "description": "Exact text to find (include enough lines for uniqueness)"},
+                "replace": {"type": "string", "description": "New text to replace with"},
+                "file": {"type": "string", "description": "Relative path like: src/main.py"}
+            },
+            "required": ["search", "replace", "file"]
+        }
+    }
+}
 
 LIST_FILES_TOOL = {
     "type": "function",
@@ -37,23 +55,6 @@ FIND_FILES_TOOL = {
 }
 
 
-PATCH_TOOL = {
-    "type": "function", 
-    "function": {
-        "name": "apply_patch",
-        "description": "Replace exact text in file. Search string must be unique. Include 3-5 lines of context. If patch fails, use grep to verify uniqueness before retrying.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "search": {"type": "string", "description": "Exact text to find (include enough lines for uniqueness)"},
-                "replace": {"type": "string", "description": "New text to replace with"},
-                "file": {"type": "string", "description": "Relative path like: src/main.py"}
-            },
-            "required": ["search", "replace", "file"]
-        }
-    }
-}
-
 GREP_FILES_TOOL = {
     "type": "function",
     "function": {
@@ -87,6 +88,60 @@ READ_LINES_TOOL = {
         }
     }
 }
+
+
+def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
+    """Apply a literal search/replace to one file with smart context suggestions."""
+
+    if "search" not in args or "replace" not in args or "file" not in args:
+        if verbose: print("invalid apply_patch call")
+        return warning("invalid `apply_patch` arguments")
+    
+    search, replace, file = args["search"], args["replace"], args["file"]
+    if verbose: print(f"apply_patch(..., ..., {file})")
+
+    try:
+        target = (repo_root / file).resolve()
+        if not str(target).startswith(str(repo_root.resolve())):
+            return feedback("file must be inside the repository")
+        
+        if not target.exists():
+            return feedback(f"file {file} not found")
+        
+        text = target.read_text()
+        search_count = text.count(search)
+
+        if search_count == 0:
+            # Try to help by showing similar content
+            search_lines = search.strip().split('\n')
+            if len(search_lines) > 1:
+                # Try searching for just the first line
+                first_line = search_lines[0].strip()
+                if first_line and text.count(first_line) > 0:
+                    return feedback(f"search string not found, but '{first_line[:30]}...' exists in file. Check whitespace/indentation")
+            return feedback("search string not found - try using grep to find the exact text")
+        
+        if search_count > 1:
+            # Find locations of matches to suggest context
+            lines = text.splitlines()
+            search_lines = search.strip().split('\n')
+            first_search_line = search_lines[0].strip() if search_lines else ""
+            
+            suggestions = []
+            for i, line in enumerate(lines):
+                if first_search_line in line:
+                    context_start = max(0, i-2)
+                    suggestions.append(f"Match at line {i+1}: ...{lines[context_start].strip()[:40]}...")
+                    
+            hint = " | ".join(suggestions[:3])
+            return feedback(f"search ambiguous: {search_count} matches. Add more context. Locations: {hint}")
+        
+        new_text = text.replace(search, replace, 1)
+        target.write_text(new_text)
+        return feedback("patch applied successfully")
+
+    except Exception as e:
+        return feedback(f"patch operation failed: {str(e)}")
 
 
 def list_files(args: dict, repo_root: Path, verbose: bool = False) -> str:
@@ -187,61 +242,6 @@ def find_files(args: dict, repo_root: Path, verbose: bool = False) -> str:
             
     except Exception as e:
         return warning(f"find_files failed: {str(e)}")
-
-
-
-def apply_patch(args: dict, repo_root: Path, verbose: bool = False) -> str:
-    """Apply a literal search/replace to one file with smart context suggestions."""
-
-    if "search" not in args or "replace" not in args or "file" not in args:
-        if verbose: print("invalid apply_patch call")
-        return warning("invalid `apply_patch` arguments")
-    
-    search, replace, file = args["search"], args["replace"], args["file"]
-    if verbose: print(f"apply_patch(..., ..., {file})")
-
-    try:
-        target = (repo_root / file).resolve()
-        if not str(target).startswith(str(repo_root.resolve())):
-            return feedback("file must be inside the repository")
-        
-        if not target.exists():
-            return feedback(f"file {file} not found")
-        
-        text = target.read_text()
-        search_count = text.count(search)
-
-        if search_count == 0:
-            # Try to help by showing similar content
-            search_lines = search.strip().split('\n')
-            if len(search_lines) > 1:
-                # Try searching for just the first line
-                first_line = search_lines[0].strip()
-                if first_line and text.count(first_line) > 0:
-                    return feedback(f"search string not found, but '{first_line[:30]}...' exists in file. Check whitespace/indentation")
-            return feedback("search string not found - try using grep to find the exact text")
-        
-        if search_count > 1:
-            # Find locations of matches to suggest context
-            lines = text.splitlines()
-            search_lines = search.strip().split('\n')
-            first_search_line = search_lines[0].strip() if search_lines else ""
-            
-            suggestions = []
-            for i, line in enumerate(lines):
-                if first_search_line in line:
-                    context_start = max(0, i-2)
-                    suggestions.append(f"Match at line {i+1}: ...{lines[context_start].strip()[:40]}...")
-                    
-            hint = " | ".join(suggestions[:3])
-            return feedback(f"search ambiguous: {search_count} matches. Add more context. Locations: {hint}")
-        
-        new_text = text.replace(search, replace, 1)
-        target.write_text(new_text)
-        return feedback("patch applied successfully")
-
-    except Exception as e:
-        return feedback(f"patch operation failed: {str(e)}")
 
 
 def grep_files(args: dict, repo_root: Path, verbose: bool = False) -> str:

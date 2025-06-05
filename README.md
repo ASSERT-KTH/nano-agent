@@ -142,25 +142,121 @@ This approach acknowledges that the agent may initially fail in certain situatio
 
 ## 🏆 Current Leaderboard
 
-Latest performance across all nano-agent versions and models:
+Performance on SWE-bench Lite subset, ranked by code similarity
 
-| Rank | Version | Model | Similarity | Tokens | Tools | Date |
-|------|---------|-------|------------|--------|-------|------|
-| 1 | v3.2.0 | deepseek-chat | 0.413 | 3484 | 7.8 | 2025-06-03 |
-| 2 | v3.2.0 | gpt-4.1 | 0.402 | 5745 | 18.5 | 2025-06-03 |
-| 3 | v3.1.1 | deepseek-chat | 0.399 | 3397 | 9.1 | 2025-06-03 |
-| 4 | v3.1.1 | gpt-4.1-mini | 0.364 | 5668 | 19.6 | 2025-06-02 |
-| 5 | v4.0.0 | deepseek-chat | 0.332 | 5508 | 19.2 | 2025-06-03 |
-| 6 | v2.0.0 | gpt-4.1-mini | 0.317 | 10609 | 33.8 | 2025-05-25 |
-| 7 | v1.1.0 | gpt-4.1-mini | 0.317 | 8767 | 30.7 | 2025-05-25 |
-| 8 | v3.0.0 | gpt-4.1 | 0.315 | 9455 | 37.7 | 2025-05-28 |
-| 9 | v3.0.0 | gpt-4.1-mini | 0.286 | 9082 | 31.3 | 2025-05-28 |
-| 10 | v3.0.0 | qwen3-32b | 0.275 | 5579 | 37.2 | 2025-05-30 |
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Ver</th>
+<th>Model</th>
+<th>Code Sim</th>
+<th>Test Sim</th>
+<th style='text-align: right !important' align='right'>Tokens</th>
+<th style='text-align: right !important' align='right'>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>v3.2.0</td>
+<td>claude-sonnet-4-20250514</td>
+<td>0.394</td>
+<td>0.188</td>
+<td style='text-align: right !important' align='right'>14,746 / 16,384</td>
+<td style='text-align: right !important' align='right'>41.5 / 100</td>
+</tr>
+<tr>
+<td>2</td>
+<td>v3.2.0</td>
+<td>gpt-4.1</td>
+<td>0.387</td>
+<td>0.092</td>
+<td style='text-align: right !important' align='right'>9,777 / 16,384</td>
+<td style='text-align: right !important' align='right'>35.7 / 100</td>
+</tr>
+<tr>
+<td>3</td>
+<td>v3.2.0</td>
+<td>gemini-2.5-flash-preview-05-20</td>
+<td>0.362</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>4,547 / 16,384</td>
+<td style='text-align: right !important' align='right'>10.1 / 100</td>
+</tr>
+<tr>
+<td>4</td>
+<td>v3.2.0</td>
+<td>gpt-4.1-mini</td>
+<td>0.350</td>
+<td>0.017</td>
+<td style='text-align: right !important' align='right'>7,403 / 16,384</td>
+<td style='text-align: right !important' align='right'>29.7 / 100</td>
+</tr>
+<tr>
+<td>5</td>
+<td>v3.2.0</td>
+<td>deepseek-chat</td>
+<td>0.336</td>
+<td>0.011</td>
+<td style='text-align: right !important' align='right'>3,297 / 16,384</td>
+<td style='text-align: right !important' align='right'>7.5 / 100</td>
+</tr>
+<tr>
+<td>6</td>
+<td>v4.0.0</td>
+<td>gpt-4.1-mini</td>
+<td>0.317</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>7,543 / 16,384</td>
+<td style='text-align: right !important' align='right'>35.5 / 100</td>
+</tr>
+<tr>
+<td>7</td>
+<td>v4.0.0</td>
+<td>deepseek-chat</td>
+<td>0.300</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>6,483 / 16,384</td>
+<td style='text-align: right !important' align='right'>14.9 / 100</td>
+</tr>
+<tr>
+<td>8</td>
+<td>v3.2.0</td>
+<td>llama-4-maverick</td>
+<td>0.255</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>4,647 / 16,384</td>
+<td style='text-align: right !important' align='right'>10.4 / 100</td>
+</tr>
+<tr>
+<td>9</td>
+<td>v3.2.0</td>
+<td>gpt-4.1-nano</td>
+<td>0.188</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,536 / 16,384</td>
+<td style='text-align: right !important' align='right'>33.1 / 100</td>
+</tr>
+<tr>
+<td>10</td>
+<td>v3.2.0</td>
+<td>devstral-small</td>
+<td>0.092</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>14,603 / 16,384</td>
+<td style='text-align: right !important' align='right'>13.0 / 100</td>
+</tr>
+</tbody>
+</table>
 
-*Updated automatically with 14 total configurations*
+**How it works:**
+- **Input**: A GitHub repository containing a bug with a known ground truth solution
+- **Task**: Nano provides models with tools to explore the codebase and generate a fix
+- **Output**: Nano produces a unified git diff containing all proposed code changes
+- **Evaluation**: We measure how closely the model's solution matches the ground truth using:
+  - **Code Similarity**: How well the fix matches the actual bug fix (primary ranking metric)
+  - **Test Similarity**: How well any test changes match the ground truth test updates
 
-**Key Metrics:**
-- **Similarity**: Average patch similarity score (ranked by this)
-- **Tokens**: Average token usage per problem
-- **Tools**: Average tool calls per problem
+**Note:** Prone to a lot of noise, small test set with few repetitions.
 
