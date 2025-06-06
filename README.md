@@ -214,6 +214,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>8</td>
 <td>v3.2.0</td>
+<td>qwen3-32b</td>
+<td>0.255</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>5,281 / 16,384</td>
+<td style='text-align: right !important' align='right'>28.3 / 100</td>
+</tr>
+<tr>
+<td>9</td>
+<td>v3.2.0</td>
 <td>llama-4-maverick</td>
 <td>0.255</td>
 <td>0.000</td>
@@ -221,25 +230,43 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>10.4 / 100</td>
 </tr>
 <tr>
-<td>9</td>
-<td>v3.2.0</td>
-<td>qwen3-32b-thinking</td>
-<td>0.220</td>
-<td>0.005</td>
-<td style='text-align: right !important' align='right'>8,011 / 16,384</td>
-<td style='text-align: right !important' align='right'>6.5 / 100</td>
-</tr>
-<tr>
 <td>10</td>
 <td>v3.2.0</td>
-<td>qwen3-235b-a22b-thinking</td>
-<td>0.199</td>
-<td>0.005</td>
-<td style='text-align: right !important' align='right'>10,988 / 16,384</td>
-<td style='text-align: right !important' align='right'>7.2 / 100</td>
+<td>qwen3-14b-thinking</td>
+<td>0.253</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,549 / 16,384</td>
+<td style='text-align: right !important' align='right'>16.3 / 100</td>
 </tr>
 <tr>
 <td>11</td>
+<td>v3.2.0</td>
+<td>qwen3-32b-thinking</td>
+<td>0.224</td>
+<td>0.005</td>
+<td style='text-align: right !important' align='right'>9,357 / 16,384</td>
+<td style='text-align: right !important' align='right'>8.3 / 100</td>
+</tr>
+<tr>
+<td>12</td>
+<td>v3.2.0</td>
+<td>qwen3-8b-thinking</td>
+<td>0.210</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,688 / 16,384</td>
+<td style='text-align: right !important' align='right'>15.0 / 100</td>
+</tr>
+<tr>
+<td>13</td>
+<td>v3.2.0</td>
+<td>qwen3-8b</td>
+<td>0.190</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,704 / 16,384</td>
+<td style='text-align: right !important' align='right'>56.5 / 100</td>
+</tr>
+<tr>
+<td>14</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
@@ -248,16 +275,16 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
-<td>12</td>
+<td>15</td>
 <td>v3.2.0</td>
-<td>qwen3-14b-thinking</td>
-<td>0.180</td>
+<td>qwen3-14b</td>
+<td>0.176</td>
 <td>0.000</td>
-<td style='text-align: right !important' align='right'>8,976 / 16,384</td>
-<td style='text-align: right !important' align='right'>7.7 / 100</td>
+<td style='text-align: right !important' align='right'>10,800 / 16,384</td>
+<td style='text-align: right !important' align='right'>82.6 / 100</td>
 </tr>
 <tr>
-<td>13</td>
+<td>16</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>
