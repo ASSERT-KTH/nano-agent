@@ -223,6 +223,7 @@ def main():
     parser.add_argument("--quick", action="store_true", help="Run only 3 problems")
     parser.add_argument("--baseline", action="store_true", help="Save results as a new baseline")
     parser.add_argument("--compare", help="Compare to this baseline")
+    parser.add_argument("--thinking", action="store_true", help="Enable thinking")
     parser.add_argument("--token-limit", type=int, default=16384, help="Token limit")
     parser.add_argument("--tool-limit", type=int, default=100, help="Tool limit")
     parser.add_argument("--max-workers", type=int, default=8, help="Max parallel workers")
@@ -261,7 +262,7 @@ def main():
         "token_limit": args.token_limit,
         "tool_limit": args.tool_limit,
         "verbose": False,
-        "thinking": False,
+        "thinking": args.thinking,
         "temperature": 0.6,   
         "top_k": 20,
         "top_p": 0.95,

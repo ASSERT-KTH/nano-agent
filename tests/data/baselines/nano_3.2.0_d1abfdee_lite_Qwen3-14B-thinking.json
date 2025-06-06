@@ -1,0 +1,556 @@
+{
+  "name": "nano_3.2.0_d1abfdee_lite_Qwen3-14B",
+  "created_at": 1749155981.1993337,
+  "metrics": {
+    "success_rate": 0.4,
+    "success_std": 0.44409708648247426,
+    "avg_similarity": 0.25314448301194986,
+    "similarity_std": 0.15858260660821583,
+    "avg_test_similarity": 0.0,
+    "test_similarity_std": 0.0,
+    "avg_tokens": 8549.875,
+    "tokens_std": 4001.2694847489756,
+    "avg_tools": 16.275,
+    "tools_std": 10.370531166081449,
+    "timestamp": 1749155981.1417367,
+    "git_commit": "93157a25666e088681ae3b781e49f8aaf1d007a4",
+    "nano_version": "3.2.0",
+    "total_problems": 10,
+    "total_runs": 40,
+    "avg_repetitions": 4,
+    "global_run_based": {
+      "success_rate": 0.4,
+      "success_std": 0.4961389383568338,
+      "avg_similarity": 0.25314448301194986,
+      "similarity_std": 0.2361158901621486,
+      "avg_test_similarity": 0.0,
+      "test_similarity_std": 0.0,
+      "avg_tokens": 8549.875,
+      "tokens_std": 5298.549192758044,
+      "avg_tools": 16.275,
+      "tools_std": 15.276909843256075
+    },
+    "global_problem_based": {
+      "success_rate": 0.4,
+      "success_std": 0.44409708648247426,
+      "avg_similarity": 0.25314448301194986,
+      "similarity_std": 0.15858260660821583,
+      "avg_test_similarity": 0.0,
+      "test_similarity_std": 0.0,
+      "avg_tokens": 8549.875,
+      "tokens_std": 4001.2694847489756,
+      "avg_tools": 16.275,
+      "tools_std": 10.370531166081449
+    },
+    "per_problem_stats": {
+      "django__django-16139": {
+        "repetitions": 4,
+        "success_rate": 0.75,
+        "success_std": 0.5,
+        "avg_similarity": 0.4493534482758621,
+        "similarity_std": 0.2995689655172414,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 5786,
+        "tokens_std": 6727.735775628133,
+        "avg_tools": 13.5,
+        "tools_std": 20.42057785666214
+      },
+      "sympy__sympy-13773": {
+        "repetitions": 4,
+        "success_rate": 0.75,
+        "success_std": 0.5,
+        "avg_similarity": 0.28589946075838824,
+        "similarity_std": 0.1911806387533814,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 6564,
+        "tokens_std": 2905.18915046852,
+        "avg_tools": 12,
+        "tools_std": 7.958224257542215
+      },
+      "django__django-12497": {
+        "repetitions": 4,
+        "success_rate": 0.5,
+        "success_std": 0.5773502691896257,
+        "avg_similarity": 0.46208869814020026,
+        "similarity_std": 0.5335740685214567,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 11188.25,
+        "tokens_std": 5540.483816118108,
+        "avg_tools": 23.5,
+        "tools_std": 16.98038083593337
+      },
+      "sympy__sympy-15308": {
+        "repetitions": 4,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.12158084513220377,
+        "similarity_std": 0.09457882032458056,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 14558.75,
+        "tokens_std": 971.0717017810786,
+        "avg_tools": 24.25,
+        "tools_std": 6.020797289396148
+      },
+      "scikit-learn__scikit-learn-13439": {
+        "repetitions": 4,
+        "success_rate": 1.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.34358430540827145,
+        "similarity_std": 0.0,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 3095,
+        "tokens_std": 784.53213233536,
+        "avg_tools": 4,
+        "tools_std": 0.0
+      },
+      "matplotlib__matplotlib-18869": {
+        "repetitions": 4,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.17462563325732658,
+        "similarity_std": 0.004285866839623406,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 6573,
+        "tokens_std": 5016.962892693812,
+        "avg_tools": 8.25,
+        "tools_std": 9.844626283748239
+      },
+      "sphinx-doc__sphinx-8713": {
+        "repetitions": 4,
+        "success_rate": 1.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.3784647107310121,
+        "similarity_std": 0.0009702841180968813,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 3889.75,
+        "tokens_std": 848.6123476986808,
+        "avg_tools": 4,
+        "tools_std": 1.4142135623730951
+      },
+      "scikit-learn__scikit-learn-25638": {
+        "repetitions": 4,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.07566611954080635,
+        "similarity_std": 0.05060065286049569,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 13796.25,
+        "tokens_std": 3628.920167671553,
+        "avg_tools": 33.25,
+        "tools_std": 19.102792117035317
+      },
+      "pydata__xarray-4248": {
+        "repetitions": 4,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.2401816088754276,
+        "similarity_std": 0.021451840118279563,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 11070.5,
+        "tokens_std": 4942.610207842276,
+        "avg_tools": 28.5,
+        "tools_std": 19.621416870348583
+      },
+      "pytest-dev__pytest-5495": {
+        "repetitions": 4,
+        "success_rate": 0.0,
+        "success_std": 0.0,
+        "avg_similarity": 0.0,
+        "similarity_std": 0.0,
+        "avg_test_similarity": 0.0,
+        "test_similarity_std": 0.0,
+        "avg_tokens": 8977.25,
+        "tokens_std": 4837.531903426237,
+        "avg_tools": 11.5,
+        "tools_std": 9.46924847422786
+      }
+    }
+  },
+  "results": [
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.5991379310344828,
+      "test_similarity": 0.0,
+      "token_usage": 1995,
+      "tool_usage": 2
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.5991379310344828,
+      "test_similarity": 0.0,
+      "token_usage": 2146,
+      "tool_usage": 2
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.5991379310344828,
+      "test_similarity": 0.0,
+      "token_usage": 3155,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.36013745704467354,
+      "test_similarity": 0.0,
+      "token_usage": 4235,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 4773,
+      "tool_usage": 10
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.39158810732414795,
+      "test_similarity": 0.0,
+      "token_usage": 6599,
+      "tool_usage": 11
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.9241773962804005,
+      "test_similarity": 0.0,
+      "token_usage": 7367,
+      "tool_usage": 15
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.9241773962804005,
+      "test_similarity": 0.0,
+      "token_usage": 5505,
+      "tool_usage": 8
+    },
+    {
+      "instance_id": "sympy__sympy-13773",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.3918722786647315,
+      "test_similarity": 0.0,
+      "token_usage": 10649,
+      "tool_usage": 23
+    },
+    {
+      "instance_id": "django__django-16139",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 15848,
+      "tool_usage": 44
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.22263681592039802,
+      "test_similarity": 0.0,
+      "token_usage": 14319,
+      "tool_usage": 20
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 15836,
+      "tool_usage": 47
+    },
+    {
+      "instance_id": "django__django-12497",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 16045,
+      "tool_usage": 24
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.16039685820587019,
+      "test_similarity": 0.0,
+      "token_usage": 14475,
+      "tool_usage": 26
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.34358430540827145,
+      "test_similarity": 0.0,
+      "token_usage": 2579,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.34358430540827145,
+      "test_similarity": 0.0,
+      "token_usage": 4205,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.34358430540827145,
+      "test_similarity": 0.0,
+      "token_usage": 3091,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.34358430540827145,
+      "test_similarity": 0.0,
+      "token_usage": 2505,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.17810371922472498,
+      "test_similarity": 0.0,
+      "token_usage": 3674,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.10328970640254687,
+      "test_similarity": 0.0,
+      "token_usage": 13556,
+      "tool_usage": 32
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.173392345743296,
+      "test_similarity": 0.0,
+      "token_usage": 5067,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.17791732077446362,
+      "test_similarity": 0.0,
+      "token_usage": 3525,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 0,
+      "success": true,
+      "similarity": 0.37992013690815746,
+      "test_similarity": 0.0,
+      "token_usage": 2887,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "sympy__sympy-15308",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 15885,
+      "tool_usage": 19
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 1,
+      "success": true,
+      "similarity": 0.3779795686719637,
+      "test_similarity": 0.0,
+      "token_usage": 3624,
+      "tool_usage": 4
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 2,
+      "success": true,
+      "similarity": 0.3779795686719637,
+      "test_similarity": 0.0,
+      "token_usage": 4150,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "repetition": 3,
+      "success": true,
+      "similarity": 0.3779795686719637,
+      "test_similarity": 0.0,
+      "token_usage": 4898,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-18869",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.1690891472868217,
+      "test_similarity": 0.0,
+      "token_usage": 14026,
+      "tool_usage": 23
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.09556650246305419,
+      "test_similarity": 0.0,
+      "token_usage": 8390,
+      "tool_usage": 6
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.1019705974350954,
+      "test_similarity": 0.0,
+      "token_usage": 15001,
+      "tool_usage": 34
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.10512737826507579,
+      "test_similarity": 0.0,
+      "token_usage": 15928,
+      "tool_usage": 47
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 15866,
+      "tool_usage": 46
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.24596273291925466,
+      "test_similarity": 0.0,
+      "token_usage": 15469,
+      "tool_usage": 53
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.21963974433468914,
+      "test_similarity": 0.0,
+      "token_usage": 9593,
+      "tool_usage": 17
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.2677636499626028,
+      "test_similarity": 0.0,
+      "token_usage": 14483,
+      "tool_usage": 35
+    },
+    {
+      "instance_id": "pydata__xarray-4248",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.22736030828516376,
+      "test_similarity": 0.0,
+      "token_usage": 4737,
+      "tool_usage": 9
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 3,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 4557,
+      "tool_usage": 3
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 2,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 7871,
+      "tool_usage": 10
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 0,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 7607,
+      "tool_usage": 8
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5495",
+      "repetition": 1,
+      "success": false,
+      "similarity": 0.0,
+      "test_similarity": 0.0,
+      "token_usage": 15874,
+      "tool_usage": 25
+    }
+  ],
+  "config": {
+    "nano_version": "3.2.0",
+    "git_commit": "93157a25666e088681ae3b781e49f8aaf1d007a4",
+    "test_set": "lite",
+    "repetitions": 4,
+    "max_workers": 4,
+    "model": "hosted_vllm/Qwen/Qwen3-14B",
+    "api_base": "http://localhost:8000/v1",
+    "token_limit": 16384,
+    "tool_limit": 100,
+    "thinking": true,
+    "temperature": 0.6,
+    "top_k": 20,
+    "top_p": 0.95,
+    "min_p": 0.05
+  }
+}
