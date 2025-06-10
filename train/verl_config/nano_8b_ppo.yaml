@@ -17,7 +17,7 @@ actor_rollout_ref:
     top_p: 0.9
     load_format: safetensors
     tool_kwargs:
-      tools_config_file: verl_tools/nano_tools.yaml
+      tools_config_file: verl_config/nano_tools.yaml
 
 trainer:
   reward_fn: combined_reward
