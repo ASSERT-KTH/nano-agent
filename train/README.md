@@ -1,58 +1,74 @@
 # VERL Training for Nano Agent
 
-Minimal setup to train Nano with VERL using exact tool implementations.
+VERL-compatible training setup for Nano using exact tool implementations. This directory contains VERL-wrapped versions of Nano's tools and configs for distributed RL training.
 
 ## Quick Start
 
-1. **Convert dataset**:
+### 1. Prepare Dataset
 ```bash
 cd train
 python build_dataset.py --dataset princeton-nlp/SWE-bench_Lite --split test
 ```
 
-2. **Train with VERL**:
+### 2. Build Container
 ```bash
-python -m verl.train \
-  --config nano_sglang.yaml \
-  --dataset swe_bench_verl.jsonl \
-  --actor_model qwen/Qwen3-7B-Instruct
+apptainer build nano-verl.sif container.def
 ```
+
+### 3. Allocate SLURM Resources
+```bash
+salloc --gpus 8 -c fat  # (adjust to your own slurm server setup)
+```
+
+### 4. Launch Training
+Example with 8B model using PPO:
+```bash
+apptainer exec --nv nano-verl.sif python -m verl.train \
+  --config verl_config/nano_8b_ppo.yaml \
+  --dataset swe_bench_verl.jsonl \
+  --actor_model Qwen/Qwen3-8B
+```
+
+**Other available configs:**
+- `nano_8b_ppo.yaml` - 8B model, PPO, 4 GPUs
+- `nano_8b_grpo.yaml` - 8B model, GRPO, 4 GPUs  
+- `nano_32b_ppo.yaml` - 32B model, PPO, 8 GPUs
+- `nano_32b_grpo.yaml` - 32B model, GRPO, 8 GPUs
 
 ## Structure
 
-- `verl_tools/` - VERL-wrapped versions of Nano's tools
-  - `workspace.py` - Git repo management per rollout
-  - `shell.py` - Shell tool (exact match of nano.tools.shell)
-  - `patch.py` - Patch tool (exact match of nano.tools.apply_patch)
-  - `swe_tools.yaml` - Tool schemas
+**Tool Implementation:**
+- `verl_tools/` - Nano's tools made VERL-compatible
+  - `workspace.py` - Git repo management using nano.utils
+  - `shell.py` - Exact match of nano.tools.shell
+  - `patch.py` - Exact match of nano.tools.apply_patch  
+  - `nano_tools.yaml` - Tool schemas for VERL
 
-- `build_dataset.py` - Load SWE-Bench from HuggingFace → VERL JSONL
-- `reward.py` - CodeRepairRL-style unified diff reward functions
-- `nano_sglang.yaml` - VERL training config
+**Training Pipeline:**
+- `build_dataset.py` - Convert SWE-Bench → VERL JSONL format
+- `reward.py` - Combined reward function + individual metrics logging
+- `container.def` - Apptainer container with VERL + Nano
+- `verl_config/` - Training configurations for different model sizes
 
-## Reward Functions
+## Reward Function
 
-- `non_empty_diff` - Binary: 1.0 if any diff generated
-- `diff_similarity` - CodeRepairRL unified diff similarity (0-1)
-- `file_match` - Fraction of correct files identified (0-1)
-- `test_similarity` - Similarity to test patches (0-1)
+**Combined Training Signal:** `0.5 × similarity + 0.3 × file_match + 0.2 × test_similarity`
+
+**Individual Metrics (logged separately):**
+- `reward_diff_similarity` - Unified diff similarity to ground truth
+- `reward_file_match` - Fraction of correct files identified  
+- `reward_test_similarity` - Similarity to test patches
+- `reward_combined` - The actual training signal
+- Tool usage counts (`shell_calls`, `patch_calls`)
 
 ## Customization
 
 Override config parameters:
 ```bash
 python -m verl.train \
-  --config configs/nano_sglang.yaml \
+  --config verl_config/nano_8b_ppo.yaml \
   --dataset data.jsonl \
-  --actor_model gpt2 \
-  --trainer.reward_fn nano_success \
+  --actor_model Qwen/Qwen3-32B \
   --trainer.batch_size 64 \
-  --resources.num_gpus 4
+  --resources.num_gpus 8
 ```
-
-## Notes
-
-- Tools use Nano's exact feedback/warning messages
-- Each rollout gets a fresh git checkout
-- Diffs are saved for reward computation
-- Uses Nano's unified_diff_similarity metric
