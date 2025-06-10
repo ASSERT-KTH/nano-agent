@@ -1,14 +1,12 @@
 import json
-import sys
+import argparse
 from pathlib import Path
 from typing import Dict
 
-# Import Nano's system prompt
-sys.path.append(str(Path(__file__).parent.parent))
 from nano.agent import SYSTEM_PROMPT
 
 def to_sample(row: Dict) -> Dict:
-    """Convert a SWE-Bench row to VERL dataset format."""
+    """Convert a SWE-Gym esque row to VERL dataset format."""
     return {
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -34,16 +32,11 @@ def convert_dataset(dataset_name: str, split: str, output_file: Path):
     
     print(f"Converted {len(dataset)} samples from {dataset_name}:{split} to {output_file}")
 
-def main():
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Convert SWE-Bench dataset to VERL format")
-    parser.add_argument("--dataset", default="princeton-nlp/SWE-bench_Lite", 
-                        help="HuggingFace dataset name (default: princeton-nlp/SWE-bench_Lite)")
+def main():    
+    parser = argparse.ArgumentParser(description="Convert SWE-Gym dataset to VERL format")
+    parser.add_argument("--dataset", default="SWE-Gym/SWE-Gym", help="HuggingFace dataset name (default: SWE-Gym/SWE-Gym)")
     parser.add_argument("--split", default="test", help="Dataset split (default: test)")
-    parser.add_argument("--output", type=Path, default="swe_bench_verl.jsonl",
-                        help="Output JSONL file (default: swe_bench_verl.jsonl)")
-    
+    parser.add_argument("--output", type=Path, default="swe_gym_verl.jsonl", help="Output JSONL file (default: swe_gym_verl.jsonl)")
     args = parser.parse_args()
     
     convert_dataset(args.dataset, args.split, args.output)

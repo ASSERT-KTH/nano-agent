@@ -17,19 +17,19 @@ apptainer build nano-verl.sif container.def
 
 ### 3. Allocate SLURM Resources
 ```bash
-salloc --gpus 8 -c fat  # (adjust to your own slurm server setup)
+salloc --gpus 4 -c fat  # (adjust to your own slurm server setup)
 ```
 
 ### 4. Launch Training
-Example with 8B model using PPO:
+Example with 8B model using GRPO:
 ```bash
 apptainer exec --nv nano-verl.sif python -m verl.train \
-  --config verl_config/nano_8b_ppo.yaml \
+  --config verl_config/nano_8b_grpo.yaml \
   --dataset swe_bench_verl.jsonl \
   --actor_model Qwen/Qwen3-8B
 ```
 
-**Other available configs:**
+**Available configs:**
 - `nano_8b_ppo.yaml` - 8B model, PPO, 4 GPUs
 - `nano_8b_grpo.yaml` - 8B model, GRPO, 4 GPUs  
 - `nano_32b_ppo.yaml` - 32B model, PPO, 8 GPUs
@@ -52,23 +52,10 @@ apptainer exec --nv nano-verl.sif python -m verl.train \
 
 ## Reward Function
 
-**Combined Training Signal:** `0.5 × similarity + 0.3 × file_match + 0.2 × test_similarity`
+**Combined Training Signal:** `0.5 × similarity + 0.5 × test_similarity`
 
 **Individual Metrics (logged separately):**
 - `reward_diff_similarity` - Unified diff similarity to ground truth
-- `reward_file_match` - Fraction of correct files identified  
 - `reward_test_similarity` - Similarity to test patches
 - `reward_combined` - The actual training signal
 - Tool usage counts (`shell_calls`, `patch_calls`)
-
-## Customization
-
-Override config parameters:
-```bash
-python -m verl.train \
-  --config verl_config/nano_8b_ppo.yaml \
-  --dataset data.jsonl \
-  --actor_model Qwen/Qwen3-32B \
-  --trainer.batch_size 64 \
-  --resources.num_gpus 8
-```

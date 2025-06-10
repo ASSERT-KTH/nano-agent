@@ -1,12 +1,13 @@
 Bootstrap: docker
-    From: docker://whatcanyousee/verl:ngc-cu124-vllm0.8.5-sglang0.4.6.post5-mcore0.12.1-te2.3-deepseek
+From: docker://whatcanyousee/verl:ngc-cu124-vllm0.8.5-sglang0.4.6.post5-mcore0.12.1-te2.3-deepseek
 
-$files
-    ../nano
-    ../setup.py
+%files
+    ../nano /workspace/nano
+    ../setup.py /workspace/setup.py
 
 %post
     apt-get update
     apt-get install -y --no-install-recommends git ripgrep  # Nano needs git and ripgrep
     
-    pip install -e .  # install Nano
+    cd /workspace
+    pip install -e .  # install Nano with GitPython dependency
