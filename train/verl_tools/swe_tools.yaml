@@ -1,0 +1,34 @@
+tools:
+  - class_name: "verl_tools.shell.ShellTool"
+    tool_schema:
+      type: function
+      function:
+        name: shell
+        description: "Run shell command. Use for: finding files (find, rg -l), reading files (head, grep -n), checking structure (ls -la). Output truncated to ~2000 chars."
+        parameters:
+          type: object
+          properties:
+            cmd:
+              type: string
+              description: "Command like: grep -n 'def function' file.py"
+          required: [cmd]
+
+  - class_name: "verl_tools.patch.ApplyPatchTool"
+    tool_schema:
+      type: function
+      function:
+        name: apply_patch
+        description: "Replace exact text in file. The search string must appear exactly once. If patch fails, re-read the file and try again with corrected search."
+        parameters:
+          type: object
+          properties:
+            search:
+              type: string
+              description: "Exact text to find (including whitespace/indentation)"
+            replace:
+              type: string
+              description: "New text to replace with"
+            file:
+              type: string
+              description: "Relative path like: src/main.py"
+          required: [search, replace, file]

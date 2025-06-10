@@ -7,7 +7,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import statistics
 
 from nano import Agent, __version__
-from utils import clone_repo_at_commit, clean_repo_dir, unified_diff_similarity, get_git_commit_hash
+from nano.utils import clone_repo_at_commit, clean_repo_dir
+from utils import unified_diff_similarity, get_git_commit_hash
 from baseline import load_baseline, save_baseline, generate_baseline_name, build_config_snapshot, compare_baselines
 from leaderboard import update_readme_leaderboard
 
