@@ -27,12 +27,12 @@ algorithm:
 
 trainer:
   reward_fn: combined_reward
-  batch_size: 32
+  batch_size: 12
   gradient_accumulation_steps: 4
 
 resources:
-  num_gpus: 4
-  num_rollout_workers: 2
+  num_gpus: 2
+  num_rollout_workers: 0  # hybrid engine
   rollout_gpu_per_worker: 1
   trainer_gpu: 2
 

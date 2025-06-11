@@ -3,6 +3,8 @@ import argparse
 from pathlib import Path
 from typing import Dict
 
+from datasets import load_dataset
+
 from nano.agent import SYSTEM_PROMPT
 
 def to_sample(row: Dict) -> Dict:
@@ -21,7 +23,6 @@ def to_sample(row: Dict) -> Dict:
 
 def convert_dataset(dataset_name: str, split: str, output_file: Path):
     """Load SWE-Bench from HuggingFace datasets and convert to VERL JSONL format."""
-    from datasets import load_dataset
     
     dataset = load_dataset(dataset_name, split=split)
     

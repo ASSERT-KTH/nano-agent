@@ -7,12 +7,12 @@ VERL-compatible training setup for Nano using exact tool implementations. This d
 ### 1. Prepare Dataset
 ```bash
 cd train
-python build_dataset.py --dataset princeton-nlp/SWE-bench_Lite --split test
+python build_dataset.py
 ```
 
 ### 2. Build Container
 ```bash
-apptainer build nano-verl.sif container.def
+apptainer build --fakeroot verl.sif container.def
 ```
 
 ### 3. Allocate SLURM Resources
