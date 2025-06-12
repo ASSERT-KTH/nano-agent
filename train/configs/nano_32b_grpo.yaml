@@ -1,0 +1,138 @@
+# VERL GRPO Configuration for Nano 32B Model
+# Based on VERL v0.4+ best practices from ToolRL and ReTool examples
+
+trainer:
+  # Training configuration
+  val_before_train: false   # skip the pre-training sanity pass
+  test_freq: 999999999      # or -1 with nightly builds
+  total_training_steps: 1000
+  total_epochs: 10
+  eval_every_n_steps: 50
+  checkpoint:
+    save_every_n_steps: 100
+    save_path: output/nano32b_grpo/checkpoints
+  
+  # Project tracking
+  project_name: nano-agent-grpo
+  experiment_name: qwen3-32b-grpo-run
+  default_local_dir: output/nano32b_grpo
+  
+  # Distributed training
+  n_gpus_per_node: 8
+  nnodes: 1
+  
+  # Logging
+  logger: ["console", "wandb"]
+
+# Weights & Biases configuration
+loggers:
+  wandb:
+    enabled: true
+    project: Nano-VERL
+    name: ${trainer.experiment_name}
+    tags: ["grpo", "qwen3-32b", "multi-turn", "tool-use"]
+    notes: "GRPO training with multi-turn tool use for coding agent - 32B model"
+
+# Data configuration
+data:
+  train_files: swe_gym_verl.parquet
+  val_files: dummy.parquet
+  prompt_key: messages
+  train_batch_size: 12
+  
+  # Token limits (explicit as mentioned in brief)
+  max_prompt_length: 1024
+  max_response_length: 7168
+  filter_overlong_prompts: true
+  truncation: 'error'
+
+# Model and training configuration
+actor_rollout_ref:
+  model:
+    path: Qwen/Qwen3-32B
+    
+    # LoRA configuration (as specified in brief)
+    lora_rank: 32
+    lora_alpha: 32
+    lora_target_modules: "all-linear"
+    lora_dropout: 0.1
+    load_format: "safetensors"
+    
+    # Memory optimization
+    enable_gradient_checkpointing: true
+    use_remove_padding: true
+  
+  # Actor (learner) configuration
+  actor:
+    strategy: fsdp2
+    optim:
+      lr: 1e-6
+      weight_decay: 0.01
+    
+    # GRPO-specific settings
+    use_kl_loss: true
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    entropy_coeff: 0.0
+    
+    # Batch sizes (adjusted for 32B model)
+    ppo_mini_batch_size: 3
+    ppo_micro_batch_size_per_gpu: 1
+    ppo_batch_size: 12
+    gradient_accumulation_steps: 4
+    
+    # FSDP configuration
+    fsdp_config:
+      param_offload: false
+      optimizer_offload: false
+  
+  # Reference model configuration
+  ref:
+    strategy: fsdp2
+  
+  # Hybrid engine for better performance
+  hybrid_engine: true
+  
+  # Rollout configuration
+  rollout:
+    # Use SGLang for better async performance (as mentioned in brief)
+    name: sglang_async
+    tensor_model_parallel_size: 4
+    
+    # Multi-turn support (critical for tool use)
+    multi_turn:
+      enable: true
+      tool_config_path: configs/tools.yaml
+    
+    # Generation parameters
+    response_length: 7168
+    max_num_batched_tokens: 2048
+    n: 4  # Group sampling for GRPO (must be > 1)
+    temperature: 0.7
+    top_p: 0.9
+    
+    # Batch sizes for rollout
+    log_prob_micro_batch_size_per_gpu: 1
+    
+    # Performance optimization
+    enable_chunked_prefill: false
+    use_cuda_graph: true
+
+# Algorithm configuration
+algorithm:
+  # GRPO algorithm
+  adv_estimator: grpo
+  norm_adv_by_std_in_grpo: false
+  
+  # GAE parameters
+  gamma: 1.0
+  lam: 1.0
+
+# Custom reward function
+custom_reward_function:
+  path: reward.py
+  name: combined_reward
+
+# Disable reward model (using custom reward)
+reward_model:
+  enable: false

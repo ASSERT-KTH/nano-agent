@@ -1,0 +1,137 @@
+# VERL GRPO Configuration for Nano 8B Model
+# Based on VERL v0.4+ best practices from ToolRL and ReTool examples
+
+trainer:
+  # Training configuration
+  val_before_train: false   # skip the pre-training sanity pass
+  test_freq: 999999999      # or -1 with nightly builds
+  save_freq=20
+  total_epochs: 10
+
+  critic_warmup: 0
+  
+  # Project tracking
+  project_name: nano-agent-grpo
+  experiment_name: qwen3-8b-grpo-run
+  default_local_dir: output/nano8b_grpo
+  
+  # Distributed training
+  n_gpus_per_node: 2
+  nnodes: 1
+  
+  # Logging
+  logger: ["console", "wandb"]
+
+# Weights & Biases configuration
+loggers:
+  wandb:
+    enabled: true
+    project: Nano-VERL
+    name: ${trainer.experiment_name}
+    tags: ["grpo", "qwen3-8b", "multi-turn", "tool-use"]
+    notes: "GRPO training with multi-turn tool use for coding agent"
+
+# Data configuration
+data:
+  train_files: swe_gym_verl.parquet
+  val_files: dummy.parquet
+  prompt_key: messages
+  train_batch_size: 16
+  
+  # Token limits (explicit as mentioned in brief)
+  max_prompt_length: 1024
+  max_response_length: 7168
+  filter_overlong_prompts: true
+  truncation: 'error'
+
+# Model and training configuration
+actor_rollout_ref:
+  # Hybrid engine for 3D weight sharding
+  hybrid_engine: true
+
+  model:
+    path: Qwen/Qwen3-8B
+    trust_remote_code: true
+    use_shm: true
+
+    # LoRA configuration (as specified in brief)
+    lora_rank: 32
+    lora_alpha: 64
+    lora_target_modules: "all-linear"
+    lora_dropout: 0.1
+    load_format: "safetensors"
+    
+    # Memory optimization
+    gpu_memory_utilization: 0.9
+    enable_gradient_checkpointing: true
+    use_remove_padding: true
+  
+  # Actor (learner) configuration
+  actor:
+    strategy: fsdp2
+    optim:
+      lr: 5e-6
+      weight_decay: 0.01
+    
+    # GRPO-specific settings
+    use_kl_loss: true
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    entropy_coeff: 0.0
+    
+    # Batch sizes
+    ppo_mini_batch_size: 4
+    ppo_micro_batch_size_per_gpu: 4
+    ppo_batch_size: 16
+    
+    # FSDP configuration
+    fsdp_config:
+      param_offload: false
+      optimizer_offload: false
+  
+  # Reference model configuration
+  ref:
+    strategy: fsdp2
+  
+  # Rollout configuration
+  rollout:
+    name: vllm  # supported as of v0.4.0
+    tensor_model_parallel_size: 2
+    
+    multi_turn: true
+    tool_kwargs: 
+      tool_config_path: configs/tools.yaml
+    
+    # Generation parameters
+    n: 4  # Group sampling for GRPO (must be > 1)
+    response_length: 7168
+    max_num_batched_tokens: 4096
+    temperature: 0.7
+    top_p: 0.9
+
+    # Batch sizes for rollout
+    log_prob_micro_batch_size_per_gpu: 4
+    
+    # Performance optimization
+    enforce_eager: false
+    free_cache_engine: false
+    enable_tokenization_sanity_check: true
+
+# Algorithm configuration
+algorithm:
+  # GRPO algorithm
+  adv_estimator: grpo
+  norm_adv_by_std_in_grpo: false
+  
+  # GAE parameters
+  gamma: 1.0
+  lam: 1.0
+
+# Custom reward function
+custom_reward_function:
+  path: reward.py
+  name: combined_reward
+
+# Disable reward model (using custom reward)
+reward_model:
+  enable: false
