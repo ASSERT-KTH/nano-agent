@@ -15,7 +15,7 @@ mkdir -p logs
 # --------------------------------------------------------------------
 #  Launch GRPO training using YAML configuration
 # --------------------------------------------------------------------
-apptainer exec --nv nano.sif python -m verl.trainer.main_grpo \
+apptainer exec --nv nano.sif python -m verl.trainer.main_ppo \
   --config-name $(pwd)/configs/nano_32b_grpo.yaml \
   trainer.experiment_name=qwen3-32b-grpo-${SLURM_JOB_ID} \
   "$@"

@@ -24,15 +24,6 @@ trainer:
   # Logging
   logger: ["console", "wandb"]
 
-# Weights & Biases configuration
-loggers:
-  wandb:
-    enabled: true
-    project: Nano-VERL
-    name: ${trainer.experiment_name}
-    tags: ["grpo", "qwen3-32b", "multi-turn", "tool-use"]
-    notes: "GRPO training with multi-turn tool use for coding agent - 32B model"
-
 # Data configuration
 data:
   train_files: swe_gym_verl.parquet
