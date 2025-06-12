@@ -1,6 +1,6 @@
 # VERL Training for Nano Agent
 
-VERL-compatible training setup for Nano using exact tool implementations. This directory contains VERL-wrapped versions of Nano's tools and configs for distributed RL training.
+VERL-compatible training setup for Nano using exact tool implementations. This directory contains VERL-wrapped versions of Nano's tools and SLURM scripts for distributed RL training.
 
 ## Quick Start
 
@@ -12,43 +12,42 @@ python build_dataset.py
 
 ### 2. Build Container
 ```bash
-apptainer build --fakeroot verl.sif container.def
+apptainer build --fakeroot nano.sif scripts/container.def
 ```
 
-### 3. Allocate SLURM Resources
+### 3. Submit SLURM Job
+
+For 8B model with GRPO (2 GPUs):
 ```bash
-salloc --gpus 4 -c fat  # (adjust to your own slurm server setup)
+sbatch scripts/nano_8b_grpo.sh
 ```
 
-### 4. Launch Training
-Example with 8B model using GRPO:
+For 32B model with GRPO (8 GPUs):
 ```bash
-apptainer exec --nv nano-verl.sif python -m verl.train \
-  --config verl_config/nano_8b_grpo.yaml \
-  --dataset swe_bench_verl.jsonl \
-  --actor_model Qwen/Qwen3-8B
+sbatch scripts/nano_32b_grpo.sh
 ```
 
-**Available configs:**
-- `nano_8b_ppo.yaml` - 8B model, PPO, 4 GPUs
-- `nano_8b_grpo.yaml` - 8B model, GRPO, 4 GPUs  
-- `nano_32b_ppo.yaml` - 32B model, PPO, 8 GPUs
-- `nano_32b_grpo.yaml` - 32B model, GRPO, 8 GPUs
+The SLURM scripts will automatically:
+- Create logs directory if needed
+- Build the container if it doesn't exist
+- Generate the dataset if needed
+- Launch VERL training with appropriate configurations
+
+**Available SLURM scripts:**
+- `scripts/nano_8b_grpo.sh` - 8B model, GRPO, 2 GPUs
+- `scripts/nano_32b_grpo.sh` - 32B model, GRPO, 8 GPUs
 
 ## Structure
 
 **Tool Implementation:**
-- `verl_tools/` - Nano's tools made VERL-compatible
-  - `workspace.py` - Git repo management using nano.utils
-  - `shell.py` - Exact match of nano.tools.shell
-  - `patch.py` - Exact match of nano.tools.apply_patch  
-  - `nano_tools.yaml` - Tool schemas for VERL
+- `tools.py` - VERL-compatible implementations of Nano's tools (ShellTool and ApplyPatchTool)
 
 **Training Pipeline:**
 - `build_dataset.py` - Convert SWE-Bench → VERL JSONL format
 - `reward.py` - Combined reward function + individual metrics logging
 - `container.def` - Apptainer container with VERL + Nano
-- `verl_config/` - Training configurations for different model sizes
+- `scripts/nano_8b_grpo.sh` - SLURM script for 8B model GRPO training
+- `scripts/nano_32b_grpo.sh` - SLURM script for 32B model GRPO training
 
 ## Reward Function
 

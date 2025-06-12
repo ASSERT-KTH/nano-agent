@@ -31,34 +31,27 @@ def test_similarity_reward(rollout):
     
     return unified_diff_similarity(test_patch, get_diff(instance_id))
 
-@register_reward_fn("combined_reward")
 def combined_reward(rollout):
     """Combined reward for training: weighted sum of all metrics."""
     
     similarity = diff_similarity_reward(rollout)
     test_sim = test_similarity_reward(rollout)
+
+    attach_diff(rollout)
+    attach_tool_counts(rollout)
     
     return 0.5 * similarity + 0.5 * test_sim
 
-@register_post_processor("attach_diff")
-def attach_diff_processor(rollout):
-    """Attach the generated diff and all reward metrics for logging/analysis."""
-    instance_id = rollout.extra.get("instance_id")
-    if not instance_id:
+def attach_diff(rollout):
+    if not rollout.extra.get("instance_id"):
         return
     
-    # Attach generated diff
-    rollout.extra["generated_diff"] = get_diff(instance_id)
-    
-    # Compute and log all individual reward metrics
-    rollout.extra["reward_diff_similarity"] = diff_similarity_reward(rollout)
-    rollout.extra["reward_test_similarity"] = test_similarity_reward(rollout)
-    rollout.extra["reward_combined"] = combined_reward(rollout)
+    rollout.extra["generated_diff"] = get_diff(rollout.extra["instance_id"])
 
-@register_post_processor("cleanup_metrics")
-def cleanup_metrics_processor(rollout):
-    """Add Nano-style metrics to rollout."""
-    # Count tool uses
+def attach_tool_counts(rollout):
+    if not rollout.extra.get("instance_id"):
+        return
+    
     shell_calls = 0
     patch_calls = 0
     
@@ -71,6 +64,3 @@ def cleanup_metrics_processor(rollout):
                 elif name == "apply_patch":
                     patch_calls += 1
     
-    rollout.extra["shell_calls"] = shell_calls
-    rollout.extra["patch_calls"] = patch_calls
-    rollout.extra["total_tool_calls"] = shell_calls + patch_calls

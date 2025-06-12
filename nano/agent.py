@@ -105,10 +105,10 @@ class Agent:
             model=model,
             api_base=api_base,
             temperature=temperature,
-            top_p=top_p,
         )
         if not model.startswith(("openai/", "anthropic/")):  # most endpoints except these support these params
             self.llm_kwargs.update(dict(
+                top_p=top_p,
                 top_k=top_k,
                 min_p=min_p,
                 chat_template_kwargs={"enable_thinking": thinking},
@@ -201,6 +201,10 @@ class Agent:
         )
 
         msg = reply["choices"][0]["message"].model_dump()
+        
+        # Remove empty annotations field that causes issues with LiteLLM token counter
+        if msg.get("annotations") == []:
+            msg.pop("annotations", None)
 
         self._append(msg)
 
