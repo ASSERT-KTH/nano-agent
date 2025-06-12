@@ -1,12 +1,10 @@
 import sys
 from pathlib import Path
 
-from verl.core_algos import register_reward_fn, register_post_processor
-
-from verl_tools.workspace import get_diff
+from tools import get_diff
 
 sys.path.append(str(Path(__file__).parent.parent))
-from test.utils import unified_diff_similarity
+from eval.utils import unified_diff_similarity
 
 
 def diff_similarity_reward(rollout):

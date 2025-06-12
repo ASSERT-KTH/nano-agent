@@ -1,5 +1,6 @@
 tools:
   - class_name: "tools.ShellTool"
+    config: {}
     tool_schema:
       type: function
       function:
@@ -14,6 +15,7 @@ tools:
           required: [cmd]
 
   - class_name: "tools.ApplyPatchTool"
+    config: {}
     tool_schema:
       type: function
       function:
