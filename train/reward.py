@@ -34,19 +34,14 @@ def combined_reward(rollout):
     
     similarity = diff_similarity_reward(rollout)
     test_sim = test_similarity_reward(rollout)
-
-    attach_diff(rollout)
-    attach_tool_counts(rollout)
     
-    return 0.5 * similarity + 0.5 * test_sim
+    return 0.5 * similarity + 0.5 * test_sim, {
+        "similarity": similarity,
+        "test_sim": test_sim,
+        **tool_counts(rollout),
+    }
 
-def attach_diff(rollout):
-    if not rollout.extra.get("instance_id"):
-        return
-    
-    rollout.extra["generated_diff"] = get_diff(rollout.extra["instance_id"])
-
-def attach_tool_counts(rollout):
+def tool_counts(rollout):
     if not rollout.extra.get("instance_id"):
         return
     
@@ -61,4 +56,9 @@ def attach_tool_counts(rollout):
                     shell_calls += 1
                 elif name == "apply_patch":
                     patch_calls += 1
+
+    return {
+        "shell_calls": shell_calls,
+        "patch_calls": patch_calls,
+    }
     

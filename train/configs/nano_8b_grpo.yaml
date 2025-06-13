@@ -28,6 +28,7 @@ data:
   train_files: swe_gym_verl.parquet
   val_files: dummy.parquet
   prompt_key: messages
+  reward_model_key: patch   
   train_batch_size: 16
   
   # Token limits (explicit as mentioned in brief)
@@ -48,8 +49,8 @@ actor_rollout_ref:
     # LoRA configuration (as specified in brief)
     lora_rank: 32
     lora_alpha: 64
-    lora_target_modules: "all-linear"
     lora_dropout: 0.1
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
     load_format: "safetensors"
     
     # Memory optimization
