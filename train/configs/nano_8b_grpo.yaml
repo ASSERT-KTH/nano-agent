@@ -17,7 +17,7 @@ trainer:
   default_local_dir: output/nano8b_grpo
   
   # Distributed training
-  n_gpus_per_node: 2
+  n_gpus_per_node: 4
   nnodes: 1
   
   # Logging
@@ -45,12 +45,6 @@ actor_rollout_ref:
   model:
     path: Qwen/Qwen3-8B
     trust_remote_code: true
-
-    # LoRA configuration (as specified in brief)
-    lora_rank: 32
-    lora_alpha: 64
-    lora_dropout: 0.1
-    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
     load_format: "safetensors"
     
     # Memory optimization
@@ -88,9 +82,9 @@ actor_rollout_ref:
   
   # Rollout configuration
   rollout:
-    name: vllm  # supported as of v0.4.0
+    name: sglang  # supported as of v0.4.0
     rollout_mode: async
-    tensor_model_parallel_size: 2
+    tensor_model_parallel_size: 4
 
     max_model_len: 10000  # the max length of the rollout
     
@@ -99,7 +93,7 @@ actor_rollout_ref:
       tool_config_path: configs/tools.yaml
     
     # Generation parameters
-    n: 4  # Group sampling for GRPO (must be > 1)
+    n: 8  # Group sampling for GRPO (must be > 1)
     response_length: 7168
     max_num_batched_tokens: 4096
     temperature: 0.7
