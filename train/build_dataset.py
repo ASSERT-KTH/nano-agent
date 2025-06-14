@@ -11,7 +11,7 @@ def to_sample(row: Dict) -> Dict:
     """Convert a SWE-Gym row to VERL dataset format."""
     return {
         "data_source": "swe-gym",
-        "prompt": [
+        "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": row["problem_statement"]},
         ],

@@ -36,6 +36,6 @@ def compute_score(data_source, solution_str, ground_truth, extra_info):
         "test_similarity": test_similarity,
     }
     
-    return main_score, extra_metrics
+    return main_score #, extra_metrics
 
     
