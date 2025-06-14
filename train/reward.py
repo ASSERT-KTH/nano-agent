@@ -29,16 +29,27 @@ def test_similarity_reward(rollout):
     
     return unified_diff_similarity(test_patch, get_diff(instance_id))
 
-def combined_reward(rollout):
-    """Combined reward for training: weighted sum of all metrics."""
+def compute_score(data_source, solution_str, ground_truth, extra_info=None):
+    """
+    VERL-compatible reward function following GSM8K pattern.
     
-    similarity = diff_similarity_reward(rollout)
-    test_sim = test_similarity_reward(rollout)
-
-    attach_diff(rollout)
-    attach_tool_counts(rollout)
+    Args:
+        data_source: Dataset name ("swe-gym")
+        solution_str: Generated solution text from the model
+        ground_truth: Ground truth patch from reward_model
+        extra_info: Additional data including instance_id, test_patch, etc.
+    """
+    if extra_info is None:
+        return 0.0
     
-    return 0.5 * similarity + 0.5 * test_sim
+    instance_id = extra_info.get("instance_id", "")
+    test_patch = extra_info.get("test_patch", "")
+    
+    generated_diff = get_diff(instance_id)
+    patch_similarity = unified_diff_similarity(ground_truth, generated_diff)
+    test_similarity = unified_diff_similarity(test_patch, generated_diff)
+    
+    return 0.5 * patch_similarity + 0.5 * test_similarity
 
 def attach_diff(rollout):
     if not rollout.extra.get("instance_id"):

@@ -126,7 +126,7 @@ algorithm:
 # Custom reward function
 custom_reward_function:
   path: reward.py
-  name: combined_reward
+  name: compute_score
   enable_custom: true 
 
 # Disable reward model (using custom reward)
