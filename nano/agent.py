@@ -1,7 +1,7 @@
 import uuid
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 
 from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning
@@ -133,7 +133,7 @@ class Agent:
     def remaining_tool_calls(self):
         return self.tool_limit - self.tool_usage
         
-    def run(self, task: str, repo_root: Optional[str|Path] = None) -> str:
+    def run(self, task: str, repo_root: Optional[Union[str, Path]] = None) -> str:
         """
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
