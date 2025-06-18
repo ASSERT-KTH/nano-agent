@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Optional, Union
 from datetime import datetime
 
-from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning
-from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL
+from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning   
+from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL, ToolStats
 
 # litellm is very slow to import, so we lazy load it
 _litellm = None
@@ -116,7 +116,7 @@ class Agent:
             ))
 
     @property
-    def token_usage(self):
+    def token_usage(self)->int:
         """
         This is highly dependent on the endpoint and model being used. Some endpoints include tool tokens, some don't.
         Litellm's token counter is designed to accurately reflect the priced tokens, but not for the actual amount of tokens used.
@@ -126,12 +126,16 @@ class Agent:
         return litellm.token_counter(self.llm_kwargs["model"], messages=self.messages, tools=self.tools)
     
     @property
-    def remaining_tokens(self):
+    def remaining_tokens(self)->int:
         return self.token_limit - self.token_usage
     
     @property
-    def remaining_tool_calls(self):
+    def remaining_tool_calls(self)->int:
         return self.tool_limit - self.tool_usage
+    
+    @property
+    def tool_stats(self)->dict[str, Union[int, float]]:
+        return self.stats.report()
         
     def run(self, task: str, repo_root: Optional[Union[str, Path]] = None) -> str:
         """
@@ -156,6 +160,7 @@ class Agent:
                 if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
                 # the agent hasn't made changes, so we remind it to operate autonomously
                 self._append({"role": "user", "content": warning("Use shell to explore or apply_patch to make changes. Do not stop working.")})
+                self.tool_usage += 1  # inaction is an action
                 continue
 
             for call in msg["tool_calls"]:  
@@ -169,10 +174,10 @@ class Agent:
                     continue
 
                 if name == "shell":
-                    output = shell(args=args, repo_root=repo_root, verbose=self.verbose)
+                    output = shell(args=args, repo_root=repo_root, stats=self.stats, verbose=self.verbose)
 
                 elif name == "apply_patch":
-                    output = apply_patch(args=args, repo_root=repo_root, verbose=self.verbose)
+                    output = apply_patch(args=args, repo_root=repo_root, stats=self.stats, verbose=self.verbose)
 
                 else:
                     output = warning(f"unknown tool: {name}")
@@ -181,8 +186,13 @@ class Agent:
                 self.tool_usage += 1
 
         unified_diff = git_diff(repo_root)
-        if self.log: self.diff_file.open("w").write(unified_diff)
-        if self.verbose: print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}")
+        if self.log: 
+            self.diff_file.open("w").write(unified_diff)
+            self.stats_file = self.out_dir/"stats.json"
+            self.stats_file.open("w").write(json.dumps(self.stats.report(), indent=2))
+        if self.verbose: 
+            print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}")
+            print(f"Tool stats: \n{self.tool_stats}")
         return unified_diff
 
     def _chat(self) -> dict:
@@ -201,6 +211,8 @@ class Agent:
         )
 
         msg = reply["choices"][0]["message"].model_dump()
+        
+        msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
 
         self._append(msg)
 
@@ -266,6 +278,7 @@ class Agent:
         
         # token usage is a property and thus behaves exactly like a variable
         self.tool_usage = 0
+        self.stats = ToolStats()
 
         if self.verbose:
             self._print_header()
