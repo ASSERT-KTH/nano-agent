@@ -210,7 +210,7 @@ class Agent:
             tool_choice="auto",
         )
 
-        msg = reply["choices"][0]["message"].model_dump()
+        msg = reply["choices"][0]["message"].model_dump(warnings="error")
         
         msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
 
