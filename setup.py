@@ -9,7 +9,7 @@ setup(
     name="nano-agent",
     version=version,
     packages=find_packages(),
-    install_requires=["litellm>=1.68.0"],
+    install_requires=["litellm @ git+https://github.com/BerriAI/litellm.git"],  # TODO: remove once litellm releases the support for the new vllm standard
     extras_require={"test": ["GitPython>=3.1.0"]},  # For SWE-Bench testing
     entry_points={
         "console_scripts": [
