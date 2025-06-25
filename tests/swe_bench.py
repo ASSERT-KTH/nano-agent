@@ -2,6 +2,7 @@ import json
 import time
 import logging
 import requests
+import traceback
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import statistics
@@ -52,11 +53,13 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
             "similarity": similarity,
             "test_similarity": test_similarity,
             "token_usage": agent.token_usage,
-            "tool_usage": agent.tool_limit - agent.remaining_tool_calls, #agent.tool_usage,
+            "tool_usage": agent.tool_usage,
         }
         
     except Exception as e:
         logging.warning(f"Failed {instance_id} (rep {repetition + 1}): {e}")
+        print(f"\n❌ Full stacktrace for {instance_id}:")
+        print(traceback.format_exc())
         result = {
             "instance_id": instance_id,
             "repetition": repetition,
