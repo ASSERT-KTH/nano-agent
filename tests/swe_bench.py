@@ -235,13 +235,13 @@ def main():
     if args.model is None:
         # Auto-detect model from local vLLM server
         api_base = "http://localhost:8000/v1"
-        model = requests.get(f"{api_base}/models").json()["data"][0]["id"]
+        model = requests.get(f"{api_base}/models").json()["data"][-1]["id"]
         print(f"🏠 No model specified, queried localhost and using {model}")
         model = f"hosted_vllm/{model}"
     else:
         model = args.model
         api_base = None
-    
+   
     # Load test data
     test_set = "verified" if args.verified else "lite"
     test_file = TEST_DATA_DIR / f"swe_bench_{test_set}_subset.json"
