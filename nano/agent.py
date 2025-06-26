@@ -114,6 +114,10 @@ class Agent:
                 chat_template_kwargs={"enable_thinking": thinking},
                 extra_body={"enable_thinking": thinking}
             ))
+        if model.startswith("gemini/"):
+            self.llm_kwargs.update(dict(
+                reasoning_effort="disable" if not thinking else "high"
+            ))
 
     @property
     def token_usage(self)->int:
@@ -210,8 +214,7 @@ class Agent:
             tool_choice="auto",
         )
 
-        msg = reply["choices"][0]["message"].model_dump(warnings="error")
-        
+        msg = reply["choices"][0]["message"].model_dump()
         msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
 
         self._append(msg)
