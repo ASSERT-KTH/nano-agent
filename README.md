@@ -277,6 +277,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>15</td>
 <td>v3.2.0</td>
+<td>nano-qwen3-8b</td>
+<td>0.192</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>6,983 / 16,384</td>
+<td style='text-align: right !important' align='right'>43.8 / 100</td>
+</tr>
+<tr>
+<td>16</td>
+<td>v3.2.0</td>
 <td>qwen3-8b</td>
 <td>0.190</td>
 <td>0.000</td>
@@ -284,7 +293,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>56.5 / 100</td>
 </tr>
 <tr>
-<td>16</td>
+<td>17</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
@@ -293,7 +302,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
-<td>17</td>
+<td>18</td>
 <td>v3.2.0</td>
 <td>qwen3-14b</td>
 <td>0.176</td>
@@ -302,7 +311,52 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>82.6 / 100</td>
 </tr>
 <tr>
-<td>18</td>
+<td>19</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-swe-gym-sft-lora</td>
+<td>0.171</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>9,607 / 16,384</td>
+<td style='text-align: right !important' align='right'>20.5 / 100</td>
+</tr>
+<tr>
+<td>20</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-swe-gym-sft-lora</td>
+<td>0.155</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,602 / 16,384</td>
+<td style='text-align: right !important' align='right'>17.5 / 100</td>
+</tr>
+<tr>
+<td>21</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-swe-gym-sft-lora</td>
+<td>0.152</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>10,508 / 16,384</td>
+<td style='text-align: right !important' align='right'>35.2 / 100</td>
+</tr>
+<tr>
+<td>22</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-swe-gym-sft-lora</td>
+<td>0.150</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>9,390 / 16,384</td>
+<td style='text-align: right !important' align='right'>26.0 / 100</td>
+</tr>
+<tr>
+<td>23</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-nano-swe-gym-sft</td>
+<td>0.125</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,100 / 16,384</td>
+<td style='text-align: right !important' align='right'>53.6 / 100</td>
+</tr>
+<tr>
+<td>24</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>
