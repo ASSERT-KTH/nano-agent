@@ -364,6 +364,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>14,603 / 16,384</td>
 <td style='text-align: right !important' align='right'>13.0 / 100</td>
 </tr>
+<tr>
+<td>25</td>
+<td>v3.3.2</td>
+<td>sft_model</td>
+<td>0.087</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>9,255 / 16,384</td>
+<td style='text-align: right !important' align='right'>76.4 / 100</td>
+</tr>
 </tbody>
 </table>
 
