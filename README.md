@@ -313,6 +313,15 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <tr>
 <td>19</td>
 <td>v3.3.2</td>
+<td>qwen32b_nano_sft</td>
+<td>0.171</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,635 / 16,384</td>
+<td style='text-align: right !important' align='right'>43.9 / 100</td>
+</tr>
+<tr>
+<td>20</td>
+<td>v3.3.2</td>
 <td>qwen3-8b-swe-gym-sft-lora</td>
 <td>0.171</td>
 <td>0.000</td>
@@ -320,7 +329,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>20.5 / 100</td>
 </tr>
 <tr>
-<td>20</td>
+<td>21</td>
 <td>v3.3.2</td>
 <td>qwen3-8b-swe-gym-sft-lora</td>
 <td>0.155</td>
@@ -329,7 +338,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>17.5 / 100</td>
 </tr>
 <tr>
-<td>21</td>
+<td>22</td>
 <td>v3.3.2</td>
 <td>qwen3-8b-swe-gym-sft-lora</td>
 <td>0.152</td>
@@ -338,7 +347,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>35.2 / 100</td>
 </tr>
 <tr>
-<td>22</td>
+<td>23</td>
 <td>v3.3.2</td>
 <td>qwen3-8b-swe-gym-sft-lora</td>
 <td>0.150</td>
@@ -347,7 +356,16 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>26.0 / 100</td>
 </tr>
 <tr>
-<td>23</td>
+<td>24</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-low-rank-kl-0.2lambda_merged</td>
+<td>0.136</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,215 / 16,384</td>
+<td style='text-align: right !important' align='right'>59.0 / 100</td>
+</tr>
+<tr>
+<td>25</td>
 <td>v3.3.2</td>
 <td>qwen3-8b-nano-swe-gym-sft</td>
 <td>0.125</td>
@@ -356,7 +374,25 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>53.6 / 100</td>
 </tr>
 <tr>
-<td>24</td>
+<td>26</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-low-rank-kl_merged</td>
+<td>0.116</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>7,676 / 16,384</td>
+<td style='text-align: right !important' align='right'>60.5 / 100</td>
+</tr>
+<tr>
+<td>27</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-low-rank_merged</td>
+<td>0.113</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,697 / 16,384</td>
+<td style='text-align: right !important' align='right'>72.1 / 100</td>
+</tr>
+<tr>
+<td>28</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>
@@ -365,13 +401,22 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>13.0 / 100</td>
 </tr>
 <tr>
-<td>25</td>
+<td>29</td>
 <td>v3.3.2</td>
 <td>sft_model</td>
 <td>0.087</td>
 <td>0.000</td>
 <td style='text-align: right !important' align='right'>9,255 / 16,384</td>
 <td style='text-align: right !important' align='right'>76.4 / 100</td>
+</tr>
+<tr>
+<td>30</td>
+<td>v3.3.2</td>
+<td>qwen3-8b-low-rank_merged</td>
+<td>0.076</td>
+<td>0.000</td>
+<td style='text-align: right !important' align='right'>8,560 / 16,384</td>
+<td style='text-align: right !important' align='right'>72.7 / 100</td>
 </tr>
 </tbody>
 </table>
