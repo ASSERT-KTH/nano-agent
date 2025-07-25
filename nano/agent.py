@@ -1,5 +1,6 @@
 import uuid
 import json
+import time
 from pathlib import Path
 from typing import Optional, Union
 from datetime import datetime
@@ -69,6 +70,7 @@ class Agent:
             api_base: Optional[str] = None,
             token_limit: int = 8192,
             tool_limit: int = 20,
+            time_limit: int = 120,
             response_limit: int = 4096,
             thinking: bool = False,
             temperature: float = 0.7,
@@ -85,6 +87,7 @@ class Agent:
             api_base (str, optional): Base URL for API endpoint, useful for local servers
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
+            time_limit (int): Maximum execution time in seconds before stopping
             response_limit (int): Maximum tokens per completion response
             thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             temperature (float): Sampling temperature, higher means more random
@@ -96,6 +99,7 @@ class Agent:
         """
         self.tool_limit = tool_limit
         self.token_limit = token_limit
+        self.time_limit = time_limit
         self.response_limit = response_limit
         self.verbose = verbose
         self.log = log
@@ -139,6 +143,10 @@ class Agent:
         return self.tool_limit - self.tool_usage
     
     @property
+    def remaining_time(self)->int:
+        return int(self.time_limit - (time.time() - self.time_start))
+    
+    @property
     def tool_stats(self)->dict[str, Union[int, float]]:
         return self.stats.report()
         
@@ -155,8 +163,13 @@ class Agent:
 
         self._reset()  # initializes the internal history and trajectory files
         self._append({"role": "user", "content": task})
-
-        while self.remaining_tool_calls >= 0 and self.remaining_tokens > self.MINIMUM_TOKENS and self.tool_failures < self.TOOL_FAILURE_THRESHOLD:
+        
+        while (
+            self.remaining_tool_calls >= 0 and 
+            self.remaining_tokens > self.MINIMUM_TOKENS and 
+            self.tool_failures < self.TOOL_FAILURE_THRESHOLD and 
+            self.remaining_time > 0
+        ):
             msg = self._chat()
 
             if self.verbose and msg.get("content"): print(msg["content"])
@@ -199,7 +212,7 @@ class Agent:
             self.stats_file = self.out_dir/"stats.json"
             self.stats_file.open("w").write(json.dumps(self.stats.report(), indent=2))
         if self.verbose: 
-            print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}")
+            print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}, time elapsed: {time.time() - self.time_start:.2f}s")
             print(f"Tool stats: \n{self.tool_stats}")
         return unified_diff
 
@@ -265,7 +278,7 @@ class Agent:
             "  ██████ \n"
             " ████████      Nano v{version}\n"
             " █▒▒▒▒▒▒█      Model: {model} {endpoint_info}\n"
-            " █▒█▒▒█▒█      Token limit: {token_limit}, Tool limit: {tool_limit}\n"
+            " █▒█▒▒█▒█      Token limit: {token_limit}, Tool limit: {tool_limit}, Time limit: {time_limit}s\n"
             " ████████      Available tools: {tools}\n"
             "  ██████  \n"
             "\n"
@@ -277,6 +290,7 @@ class Agent:
             endpoint_info=f"on: {self.llm_kwargs['api_base']}" if self.llm_kwargs['api_base'] else "",
             token_limit=self.token_limit,
             tool_limit=self.tool_limit,
+            time_limit=self.time_limit,
             tools=", ".join([t["function"]["name"] for t in self.tools])
         ))
         
@@ -287,6 +301,7 @@ class Agent:
         self.tool_usage = 0
         self.tool_failures = 0
         self.stats = ToolStats()
+        self.time_start = time.time()
 
         if self.verbose:
             self._print_header()

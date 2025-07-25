@@ -11,6 +11,7 @@ def _parse() -> argparse.Namespace:
     p.add_argument("--api_base", help="Base URL for API endpoint, useful for local servers")
     p.add_argument("--token_limit", type=int, default=32768, help="Size of the context window in tokens")
     p.add_argument("--tool_limit", type=int, default=50, help="Maximum number of tool calls the agent can make before stopping")
+    p.add_argument("--time_limit", type=int, default=120, help="Maximum execution time in seconds before stopping")
     p.add_argument("--response_limit", type=int, default=4096, help="Maximum tokens per completion response")
     p.add_argument("--thinking", action="store_true", help="Emit <think> … </think> blocks (requires compatible models)")
     p.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature, higher means more random")
@@ -29,6 +30,7 @@ def main():
         api_base=args.api_base,
         token_limit=args.token_limit,
         tool_limit=args.tool_limit,
+        time_limit=args.time_limit,
         response_limit=args.response_limit,
         thinking=args.thinking,
         temperature=args.temperature,
