@@ -62,6 +62,7 @@ class Agent:
     TOKENS_CRITICAL = 1500  # Critical token level, finish immediately
     MINIMUM_TOKENS = 600  # If we're below this, exit the loop on the next iteration
     TOOL_TRUNCATE_LENGTH = 500 * 4  # 4 characters ~= 1 token, so 2000 chars ~= 500 tokens
+    TOOL_FAILURE_THRESHOLD = 10  # If the agent fails to use a tool more than this many times, it should stop
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
@@ -155,7 +156,7 @@ class Agent:
         self._reset()  # initializes the internal history and trajectory files
         self._append({"role": "user", "content": task})
 
-        while self.remaining_tool_calls >= 0 and self.remaining_tokens > self.MINIMUM_TOKENS:
+        while self.remaining_tool_calls >= 0 and self.remaining_tokens > self.MINIMUM_TOKENS and self.tool_failures < self.TOOL_FAILURE_THRESHOLD:
             msg = self._chat()
 
             if self.verbose and msg.get("content"): print(msg["content"])
@@ -165,6 +166,7 @@ class Agent:
                 # the agent hasn't made changes, so we remind it to operate autonomously
                 self._append({"role": "user", "content": warning("Use shell to explore or apply_patch to make changes. Do not stop working.")})
                 self.tool_usage += 1  # inaction is an action
+                self.tool_failures += 1
                 continue
 
             for call in msg["tool_calls"]:  
@@ -175,6 +177,7 @@ class Agent:
                     output = warning(f"Malformed tool arguments JSON: {e}")
                     self._tool_reply(call, output)
                     self.tool_usage += 1
+                    self.tool_failures += 1
                     continue
 
                 if name == "shell":
@@ -185,6 +188,7 @@ class Agent:
 
                 else:
                     output = warning(f"unknown tool: {name}")
+                    self.tool_failures += 1
             
                 self._tool_reply(call, output)
                 self.tool_usage += 1
@@ -281,6 +285,7 @@ class Agent:
         
         # token usage is a property and thus behaves exactly like a variable
         self.tool_usage = 0
+        self.tool_failures = 0
         self.stats = ToolStats()
 
         if self.verbose:
