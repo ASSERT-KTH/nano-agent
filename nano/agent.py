@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Union
 from datetime import datetime
 
-from nano.utils import is_git_repo, is_clean, git_diff, feedback, warning   
+from nano.utils import is_git_repo, is_clean, git_diff 
 from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL, ToolStats
 
 # litellm is very slow to import, so we lazy load it
@@ -50,8 +50,6 @@ You have two tools: `shell` for executing terminal commands and `apply_patch` fo
 - Cannot ask questions or seek clarification
 - Learn only from command outputs, errors, and files
 - Monitor remaining tools/tokens and adapt strategy
-- <nano:feedback> tags provide informational messages from your environment
-- <nano:warning> tags signal issues requiring immediate action or strategy change
 
 You exist in a continuous loop of action and observation. Every tool call teaches you something. Use this feedback to refine your approach until completion."""
 
@@ -63,20 +61,19 @@ class Agent:
     TOKENS_CRITICAL = 1500  # Critical token level, finish immediately
     MINIMUM_TOKENS = 600  # If we're below this, exit the loop on the next iteration
     TOOL_TRUNCATE_LENGTH = 500 * 4  # 4 characters ~= 1 token, so 2000 chars ~= 500 tokens
-    TOOL_FAILURE_THRESHOLD = 10  # If the agent fails to use a tool more than this many times, it should stop
 
     def __init__(self,
             model:str = "openai/gpt-4.1-mini",
             api_base: Optional[str] = None,
             token_limit: int = 8192,
-            tool_limit: int = 20,
-            time_limit: int = 120,
+            tool_limit: int = 30,
+            time_limit: Optional[int] = None,
             response_limit: int = 4096,
             thinking: bool = False,
             temperature: float = 0.7,
-            top_p: float = 0.9,
-            min_p: float = 0.0,
-            top_k: int = 20,
+            top_p: Optional[float] = 0.95,
+            min_p: Optional[float] = None,
+            top_k: Optional[int] = None,
             verbose: bool = False,
             log: bool = True
         ):
@@ -87,19 +84,19 @@ class Agent:
             api_base (str, optional): Base URL for API endpoint, useful for local servers
             token_limit (int): Size of the context window in tokens. We loosly ensure that the context window is not exceeded.
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
-            time_limit (int): Maximum execution time in seconds before stopping
+            time_limit (int, optional): Maximum execution time in seconds before stopping
             response_limit (int): Maximum tokens per completion response
             thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
             temperature (float): Sampling temperature, higher means more random
-            top_p (float): Nucleus-sampling cutoff; only tokens comprising the top `p` probability mass are kept.
-            min_p (float): Relative floor for nucleus sampling; tokens below `min_p * max_token_prob` are filtered out.
-            top_k (int): Top-k sampling cutoff; only the highest-probability `k` tokens are considered.
+            top_p (float, optional): Nucleus-sampling cutoff; only tokens comprising the top `p` probability mass are kept.
+            min_p (float, optional): Relative floor for nucleus sampling; tokens below `min_p * max_token_prob` are filtered out.
+            top_k (int, optional): Top-k sampling cutoff; only the highest-probability `k` tokens are considered.
             verbose (bool): If True, prints tool calls and their outputs
             log (bool): If True, logs the agent's actions to a file
         """
         self.tool_limit = tool_limit
         self.token_limit = token_limit
-        self.time_limit = time_limit
+        self.time_limit = time_limit or int(1e9)
         self.response_limit = response_limit
         self.verbose = verbose
         self.log = log
@@ -167,7 +164,6 @@ class Agent:
         while (
             self.remaining_tool_calls >= 0 and 
             self.remaining_tokens > self.MINIMUM_TOKENS and 
-            self.tool_failures < self.TOOL_FAILURE_THRESHOLD and 
             self.remaining_time > 0
         ):
             msg = self._chat()
@@ -177,9 +173,8 @@ class Agent:
             if not msg.get("tool_calls"):
                 if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
                 # the agent hasn't made changes, so we remind it to operate autonomously
-                self._append({"role": "user", "content": warning("Use shell to explore or apply_patch to make changes. Do not stop working.")})
+                self._append({"role": "user", "content": "Use shell to explore or apply_patch to make changes. Do not stop working."})
                 self.tool_usage += 1  # inaction is an action
-                self.tool_failures += 1
                 continue
 
             for call in msg["tool_calls"]:  
@@ -187,10 +182,9 @@ class Agent:
                 try:
                     args = json.loads(call["function"]["arguments"])
                 except json.JSONDecodeError as e:
-                    output = warning(f"Malformed tool arguments JSON: {e}")
+                    output = f"Malformed tool arguments JSON: {e}"
                     self._tool_reply(call, output)
                     self.tool_usage += 1
-                    self.tool_failures += 1
                     continue
 
                 if name == "shell":
@@ -200,8 +194,7 @@ class Agent:
                     output = apply_patch(args=args, repo_root=repo_root, stats=self.stats, verbose=self.verbose)
 
                 else:
-                    output = warning(f"unknown tool: {name}")
-                    self.tool_failures += 1
+                    output = f"unknown tool: {name}"
             
                 self._tool_reply(call, output)
                 self.tool_usage += 1
@@ -249,24 +242,24 @@ class Agent:
     def _tool_reply(self, call: dict, output: str):
         # Apply truncation if output is too long
         if len(output) > self.TOOL_TRUNCATE_LENGTH:
-            output = output[:self.TOOL_TRUNCATE_LENGTH] + feedback("output truncated")
+            output = output[:self.TOOL_TRUNCATE_LENGTH] + "... output truncated"
         
         # ordered by priority
         if self.remaining_tokens < self.TOKENS_CRITICAL:
-            warning_message = warning("Token limit critical! Apply your best fix now.")
+            warning_message = "Token limit critical! Apply your best fix now."
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
-            warning_message = warning("Tokens low. Focus on the main issue only.")
+            warning_message = "Tokens low. Focus on the main issue only."
         elif 1 < self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
-            warning_message = warning(f"{self.remaining_tool_calls} tools left. Prioritize essential changes.")
+            warning_message = f"{self.remaining_tool_calls} tools left. Prioritize essential changes."
         elif self.remaining_tool_calls == 1:
-            warning_message = warning("Last tool call! Make it count.")
+            warning_message = "Last tool call! Make it count."
         else:
             warning_message = ""
             
             
         self._append({
             "role": "tool",
-            "content": warning_message + output,
+            "content": warning_message + "\n" + output,
             "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically by the inference provider, not by the model
         })
 
@@ -299,7 +292,6 @@ class Agent:
         
         # token usage is a property and thus behaves exactly like a variable
         self.tool_usage = 0
-        self.tool_failures = 0
         self.stats = ToolStats()
         self.time_start = time.time()
 

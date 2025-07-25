@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import Dict, Any
 from collections import Counter
 
-from nano.utils import feedback, warning
-
 
 SHELL_TOOL = {
     "type": "function",
@@ -42,7 +40,7 @@ def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, ver
 
     if "cmd" not in args:
         if verbose: print("invalid shell call")
-        return warning("shell tool missing required 'cmd' parameter")
+        return "shell tool missing required 'cmd' parameter"
     
     cmd = args["cmd"]
     if verbose: print(f"shell({cmd})")
@@ -59,18 +57,18 @@ def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, ver
         if res.returncode == 0:  # success
             stats.record_shell(cmd, success=True)
             if output: return output
-            else: return feedback("command succeeded")
+            else: return "command succeeded"
         else:  # failure
             stats.record_shell(cmd, success=False)
-            if output: return feedback(f"command failed with exit code {res.returncode}. Error output:") + "\n" + output
-            else: return feedback(f"command failed with exit code {res.returncode}")
+            if output: return f"command failed with exit code {res.returncode}. Error output:" + "\n" + output
+            else: return f"command failed with exit code {res.returncode}"
                 
     except subprocess.TimeoutExpired:
         stats.record_shell(cmd, success=False)
-        return warning(f"command timed out after {timeout}s")
+        return f"command timed out after {timeout}s"
     except:
         stats.record_shell(cmd, success=False)
-        return warning(f"shell execution failed")
+        return f"shell execution failed"
 
 
 def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool = False) -> str:
@@ -79,7 +77,7 @@ def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool =
     if "search" not in args or "replace" not in args or "file" not in args:
         if verbose: print("invalid apply_patch call")
         stats.record_patch(success=False)
-        return warning("invalid `apply_patch` arguments")
+        return "invalid `apply_patch` arguments"
     
     search, replace, file = args["search"], args["replace"], args["file"]
     if verbose: print(f"apply_patch(..., ..., {file})")
@@ -88,31 +86,31 @@ def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool =
         target = (repo_root / file).resolve()
         if not str(target).startswith(str(repo_root.resolve())):
             stats.record_patch(success=False)
-            return feedback("file must be inside the repository")
+            return "file must be inside the repository"
         
         if not target.exists():
             stats.record_patch(success=False)
-            return feedback(f"file {file} not found")
+            return f"file {file} not found"
         
         text = target.read_text()
         search_count = text.count(search)
 
         if search_count == 0:
             stats.record_patch(success=False)
-            return feedback("search string not found - try using grep to find the exact text")
+            return "search string not found - try using grep to find the exact text"
         
         if search_count > 1:
             stats.record_patch(success=False)
-            return feedback(f"search ambiguous: {search_count} matches - add more context to make search unique")
+            return f"search ambiguous: {search_count} matches - add more context to make search unique"
         
         new_text = text.replace(search, replace, 1)
         target.write_text(new_text)
         stats.record_patch(success=True)
-        return feedback("patch applied successfully")
+        return "patch applied successfully"
 
     except:
         stats.record_patch(success=False)
-        return feedback("patch operation failed")
+        return "patch operation failed"
     
 
 MONITORED_COMMANDS = {
