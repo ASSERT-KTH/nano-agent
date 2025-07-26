@@ -246,20 +246,20 @@ class Agent:
         
         # ordered by priority
         if self.remaining_tokens < self.TOKENS_CRITICAL:
-            warning_message = "Token limit critical! Apply your best fix now."
+            warning_message = "Token limit critical! Apply your best fix now.\n"
         elif self.remaining_tokens < self.TOKENS_WRAP_UP:
-            warning_message = "Tokens low. Focus on the main issue only."
+            warning_message = "Tokens low. Focus on the main issue only.\n"
         elif 1 < self.remaining_tool_calls < self.REMAINING_CALLS_WARNING:
-            warning_message = f"{self.remaining_tool_calls} tools left. Prioritize essential changes."
+            warning_message = f"{self.remaining_tool_calls} tools left. Prioritize essential changes.\n"
         elif self.remaining_tool_calls == 1:
-            warning_message = "Last tool call! Make it count."
+            warning_message = "Last tool call! Make it count.\n"
         else:
             warning_message = ""
             
             
         self._append({
             "role": "tool",
-            "content": warning_message + "\n" + output,
+            "content": warning_message + output,
             "tool_call_id": call["id"]  # could fail but I expect this to be assigned programmatically by the inference provider, not by the model
         })
 
