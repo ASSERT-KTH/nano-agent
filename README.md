@@ -195,15 +195,6 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 </tr>
 <tr>
 <td>6</td>
-<td>v4.0.0</td>
-<td>gpt-4.1</td>
-<td>0.367</td>
-<td>0.074</td>
-<td style='text-align: right !important' align='right'>8,637 / 16,384</td>
-<td style='text-align: right !important' align='right'>28.6 / 100</td>
-</tr>
-<tr>
-<td>7</td>
 <td>v3.3.0</td>
 <td>gemini-2.5-flash</td>
 <td>0.363</td>
@@ -212,7 +203,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>13.2 / 100</td>
 </tr>
 <tr>
-<td>8</td>
+<td>7</td>
 <td>v3.2.0</td>
 <td>gemini-2.5-flash-preview-05-20</td>
 <td>0.362</td>
@@ -221,7 +212,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>10.1 / 100</td>
 </tr>
 <tr>
-<td>9</td>
+<td>8</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-mini</td>
 <td>0.350</td>
@@ -230,7 +221,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>29.7 / 100</td>
 </tr>
 <tr>
-<td>10</td>
+<td>9</td>
 <td>v3.2.0</td>
 <td>deepseek-chat</td>
 <td>0.336</td>
@@ -239,7 +230,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>7.5 / 100</td>
 </tr>
 <tr>
-<td>11</td>
+<td>10</td>
 <td>v4.0.1</td>
 <td>glm-4.5</td>
 <td>0.323</td>
@@ -248,7 +239,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>28.7 / 100</td>
 </tr>
 <tr>
-<td>12</td>
+<td>11</td>
 <td>v3.2.0</td>
 <td>qwen-2.5-72b-instruct</td>
 <td>0.272</td>
@@ -257,7 +248,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>35.1 / 100</td>
 </tr>
 <tr>
-<td>13</td>
+<td>12</td>
 <td>v3.2.0</td>
 <td>qwen3-32b</td>
 <td>0.255</td>
@@ -266,7 +257,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>28.3 / 100</td>
 </tr>
 <tr>
-<td>14</td>
+<td>13</td>
 <td>v3.2.0</td>
 <td>llama-4-maverick</td>
 <td>0.255</td>
@@ -275,7 +266,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>10.4 / 100</td>
 </tr>
 <tr>
-<td>15</td>
+<td>14</td>
 <td>v3.2.0</td>
 <td>qwen3-14b-thinking</td>
 <td>0.253</td>
@@ -284,7 +275,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>16.3 / 100</td>
 </tr>
 <tr>
-<td>16</td>
+<td>15</td>
 <td>v3.3.0</td>
 <td>gemini-2.5-flash-lite-preview-06-17</td>
 <td>0.243</td>
@@ -293,7 +284,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>21.6 / 100</td>
 </tr>
 <tr>
-<td>17</td>
+<td>16</td>
 <td>v3.2.0</td>
 <td>qwen3-32b-thinking</td>
 <td>0.224</td>
@@ -302,7 +293,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>8.3 / 100</td>
 </tr>
 <tr>
-<td>18</td>
+<td>17</td>
 <td>v3.2.0</td>
 <td>qwen3-8b-thinking</td>
 <td>0.210</td>
@@ -311,7 +302,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>15.0 / 100</td>
 </tr>
 <tr>
-<td>19</td>
+<td>18</td>
 <td>v3.2.0</td>
 <td>qwen3-8b</td>
 <td>0.190</td>
@@ -320,7 +311,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>56.5 / 100</td>
 </tr>
 <tr>
-<td>20</td>
+<td>19</td>
 <td>v3.2.0</td>
 <td>gpt-4.1-nano</td>
 <td>0.188</td>
@@ -329,7 +320,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>33.1 / 100</td>
 </tr>
 <tr>
-<td>21</td>
+<td>20</td>
 <td>v3.2.0</td>
 <td>qwen3-14b</td>
 <td>0.176</td>
@@ -338,7 +329,7 @@ Performance on SWE-bench Lite subset, ranked by code similarity
 <td style='text-align: right !important' align='right'>82.6 / 100</td>
 </tr>
 <tr>
-<td>22</td>
+<td>21</td>
 <td>v3.2.0</td>
 <td>devstral-small</td>
 <td>0.092</td>
