@@ -7,7 +7,7 @@ def _parse() -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="nano_agent", description="Minimal CLI for nano-agent")
     p.add_argument("task", help="Natural-language description of what the agent should do")
     p.add_argument("--path", default=".", type=Path, help="Repo root (defaults to current directory)")
-    p.add_argument("--model", default="openai/gpt-4.1-mini", help="Model identifier in LiteLLM format")
+    p.add_argument("--model", default="openrouter/qwen/qwen3-coder", help="Model identifier in LiteLLM format")
     p.add_argument("--api_base", help="Base URL for API endpoint, useful for local servers")
     p.add_argument("--token_limit", type=int, default=32768, help="Size of the context window in tokens")
     p.add_argument("--tool_limit", type=int, default=50, help="Maximum number of tool calls the agent can make before stopping")

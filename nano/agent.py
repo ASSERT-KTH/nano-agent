@@ -63,7 +63,7 @@ class Agent:
     TOOL_TRUNCATE_LENGTH = 500 * 4  # 4 characters ~= 1 token, so 2000 chars ~= 500 tokens
 
     def __init__(self,
-            model:str = "openai/gpt-4.1-mini",
+            model:str = "openrouter/qwen/qwen3-coder",
             api_base: Optional[str] = None,
             token_limit: int = 8192,
             tool_limit: int = 30,
@@ -168,7 +168,7 @@ class Agent:
         ):
             msg = self._chat()
 
-            if self.verbose and msg.get("content"): print(msg["content"])
+            if self.verbose and msg.get("content"): print(msg["content"].strip())
 
             if not msg.get("tool_calls"):
                 if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done

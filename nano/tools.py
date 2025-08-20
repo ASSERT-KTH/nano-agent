@@ -43,7 +43,7 @@ def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, ver
         return "shell tool missing required 'cmd' parameter"
     
     cmd = args["cmd"]
-    if verbose: print(f"shell({cmd})")
+    if verbose: print(f"\033[1mshell\033[0m({cmd})")
     
     try:
         res = subprocess.run(
@@ -80,7 +80,7 @@ def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool =
         return "invalid `apply_patch` arguments"
     
     search, replace, file = args["search"], args["replace"], args["file"]
-    if verbose: print(f"apply_patch(..., ..., {file})")
+    if verbose: print(f"\033[1mapply_patch\033[0m(..., ..., {file})")
 
     try:
         target = (repo_root / file).resolve()
