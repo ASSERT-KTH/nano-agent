@@ -55,6 +55,32 @@ pip install nano-agent
 
 Then you just need an API key for your chosen provider or host them yourself with [vLLM](https://docs.vllm.ai/en/latest/). See [litellm](https://docs.litellm.ai/docs/) documentation for more details.
 
+## Command Line Usage
+
+Once installed, you can use the `nano_agent` command to run the agent directly from the command line:
+
+```bash
+nano_agent "Fix the bug in this repository" --model openai/gpt-4o-mini
+```
+
+The command accepts several options:
+
+- `task` (required): Natural-language description of what the agent should do
+- `--path`: Repository root (defaults to current directory)
+- `--model`: Model identifier in LiteLLM format (default: "openrouter/qwen/qwen3-coder")
+- `--api_base`: Base URL for API endpoint, useful for local servers
+- `--token_limit`: Size of the context window in tokens (default: 32768)
+- `--tool_limit`: Maximum number of tool calls the agent can make (default: 50)
+- `--time_limit`: Maximum execution time in seconds (default: 120)
+- `--response_limit`: Maximum tokens per completion response (default: 4096)
+- `--thinking`: Emit reasoning blocks (requires compatible models)
+- `--temperature`: Sampling temperature (default: 0.7)
+- `--top_p`: Nucleus-sampling cutoff (default: 0.95)
+- `--min_p`: Relative floor for nucleus sampling
+- `--top_k`: Top-k sampling cutoff
+- `--verbose`: Stream tool calls as they happen
+- `--no-log`: Disable logging of agent activity to file
+
 ---
 
 ## Example: rollout to Tensor
