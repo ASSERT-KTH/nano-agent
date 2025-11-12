@@ -55,6 +55,21 @@ pip install nano-agent
 
 Then you just need an API key for your chosen provider or host them yourself with [vLLM](https://docs.vllm.ai/en/latest/). See [litellm](https://docs.litellm.ai/docs/) documentation for more details.
 
+For OpenRouter (the default provider), you'll need to set your API key as an environment variable:
+
+```bash
+export OPENROUTER_API_KEY="your-api-key-here"
+```
+
+You can get an API key from [OpenRouter](https://openrouter.ai/keys).
+
+For other providers, set the appropriate environment variable according to [LiteLLM's documentation](https://docs.litellm.ai/docs/providers):
+
+- `OPENAI_API_KEY` for OpenAI models
+- `ANTHROPIC_API_KEY` for Anthropic models
+- `GEMINI_API_KEY` for Google Gemini models
+- etc.
+
 ## Command Line Usage
 
 Once installed, you can use the `nano_agent` command to run the agent directly from the command line:
