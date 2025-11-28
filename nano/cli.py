@@ -1,7 +1,9 @@
 import argparse
+import sys
 from pathlib import Path
 
 from nano.agent import Agent
+from nano.env import DockerEnvironment, ApptainerEnvironment
 
 def _parse() -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="nano_agent", description="Minimal CLI for nano-agent")
@@ -20,11 +22,28 @@ def _parse() -> argparse.Namespace:
     p.add_argument("--top_k", type=int, default=None, help="Top-k sampling cutoff; only the highest-probability `k` tokens are considered.")
     p.add_argument("--verbose", action="store_true", help="Stream tool calls as they happen")
     p.add_argument("--no-log", dest="log", action="store_false", help="Disable logging of agent activity to file")
+    
+    # Environment configuration
+    p.add_argument("--backend", choices=["local", "docker", "apptainer"], default="local", help="Execution backend")
+    p.add_argument("--image", help="Docker/Apptainer image to use")
+    p.add_argument("--workdir", default="/app", help="Working directory in container")
+    
     p.set_defaults(log=True)
     return p.parse_args()
 
 def main():
     args = _parse()
+    
+    env = None
+    if args.backend == "docker":
+        if not args.image:
+            sys.exit("Error: --image is required for docker backend")
+        env = DockerEnvironment(args.image, args.workdir)
+    elif args.backend == "apptainer":
+        if not args.image:
+            sys.exit("Error: --image is required for apptainer backend")
+        env = ApptainerEnvironment(args.image, args.workdir)
+        
     agent = Agent(
         model=args.model,
         api_base=args.api_base,
@@ -39,6 +58,7 @@ def main():
         top_k=args.top_k,
         verbose=args.verbose,
         log=args.log,
+        env=env
     )
     agent.run(args.task, args.path)
 
