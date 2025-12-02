@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Union
 from datetime import datetime
 
-from nano.utils import is_git_repo, is_clean, git_diff 
+from nano.env import Environment, LocalEnvironment
 from nano.tools import shell, apply_patch, SHELL_TOOL, PATCH_TOOL, ToolStats
 
 # litellm is very slow to import, so we lazy load it
@@ -71,11 +71,12 @@ class Agent:
             response_limit: int = 4096,
             thinking: bool = False,
             temperature: float = 0.7,
-            top_p: Optional[float] = 0.95,
+            top_p: Optional[float] = None,
             min_p: Optional[float] = None,
             top_k: Optional[int] = None,
             verbose: bool = False,
-            log: bool = True
+            log: bool = True,
+            env: Optional[Environment] = None
         ):
         """Initialize a Nano instance.
 
@@ -93,6 +94,7 @@ class Agent:
             top_k (int, optional): Top-k sampling cutoff; only the highest-probability `k` tokens are considered.
             verbose (bool): If True, prints tool calls and their outputs
             log (bool): If True, logs the agent's actions to a file
+            env (Environment, optional): Execution environment. If None, uses LocalEnvironment.
         """
         self.tool_limit = tool_limit
         self.token_limit = token_limit
@@ -100,6 +102,7 @@ class Agent:
         self.response_limit = response_limit
         self.verbose = verbose
         self.log = log
+        self.env = env
         
         self.tools = [SHELL_TOOL, PATCH_TOOL]
         
@@ -152,62 +155,73 @@ class Agent:
         Run the agent on the given repository with the given task.
         Returns the unified diff of the changes made to the repository.
         """
-        repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
+        if self.env:
+            env = self.env
+        else:
+            repo_root = Path(repo_root).absolute() if repo_root else Path.cwd()
+            # LocalEnvironment checks existence in start(), but we can check here too
+            env = LocalEnvironment(repo_root)
 
-        assert repo_root.exists(), "Repository not found"
-        assert is_git_repo(repo_root), "Must be run inside a git repository"
-        assert is_clean(repo_root), "Repository must be clean"
+        try:
+            env.start()
+            if not env.is_git_repo():
+                raise RuntimeError("Must be run inside a git repository")
+            if not env.is_clean():
+                raise RuntimeError("Repository must be clean")
 
-        self._reset()  # initializes the internal history and trajectory files
-        self._append({"role": "user", "content": task})
-        
-        while (
-            self.remaining_tool_calls >= 0 and 
-            self.remaining_tokens > self.MINIMUM_TOKENS and 
-            self.remaining_time > 0
-        ):
-            msg = self._chat()
+            self._reset()  # initializes the internal history and trajectory files
+            self._append({"role": "user", "content": task})
+            
+            while (
+                self.remaining_tool_calls >= 0 and 
+                self.remaining_tokens > self.MINIMUM_TOKENS and 
+                self.remaining_time > 0
+            ):
+                msg = self._chat()
 
-            if self.verbose and msg.get("content"): print(msg["content"].strip())
+                if self.verbose and msg.get("content"): print(msg["content"].strip())
 
-            if not msg.get("tool_calls"):
-                if not is_clean(repo_root): break  # the agent has made changes, and didn't request any more tools so it is done
-                # the agent hasn't made changes, so we remind it to operate autonomously
-                self._append({"role": "user", "content": "Use shell to explore or apply_patch to make changes. Do not stop working."})
-                self.tool_usage += 1  # inaction is an action
-                continue
-
-            for call in msg["tool_calls"]:  
-                name = call["function"]["name"]
-                try:
-                    args = json.loads(call["function"]["arguments"])
-                except json.JSONDecodeError as e:
-                    output = f"Malformed tool arguments JSON: {e}"
-                    self._tool_reply(call, output)
-                    self.tool_usage += 1
+                if not msg.get("tool_calls"):
+                    if not env.is_clean(): break  # the agent has made changes, and didn't request any more tools so it is done
+                    # the agent hasn't made changes, so we remind it to operate autonomously
+                    self._append({"role": "user", "content": "Use shell to explore or apply_patch to make changes. Do not stop working."})
+                    self.tool_usage += 1  # inaction is an action
                     continue
 
-                if name == "shell":
-                    output = shell(args=args, repo_root=repo_root, stats=self.stats, verbose=self.verbose)
+                for call in msg["tool_calls"]:  
+                    name = call["function"]["name"]
+                    try:
+                        args = json.loads(call["function"]["arguments"])
+                    except json.JSONDecodeError as e:
+                        output = f"Malformed tool arguments JSON: {e}"
+                        self._tool_reply(call, output)
+                        self.tool_usage += 1
+                        continue
 
-                elif name == "apply_patch":
-                    output = apply_patch(args=args, repo_root=repo_root, stats=self.stats, verbose=self.verbose)
+                    if name == "shell":
+                        output = shell(args=args, env=env, stats=self.stats, verbose=self.verbose)
 
-                else:
-                    output = f"unknown tool: {name}"
+                    elif name == "apply_patch":
+                        output = apply_patch(args=args, env=env, stats=self.stats, verbose=self.verbose)
+
+                    else:
+                        output = f"unknown tool: {name}"
+                
+                    self._tool_reply(call, output)
+                    self.tool_usage += 1
+
+            unified_diff = env.get_diff()
+            if self.log: 
+                self.diff_file.open("w").write(unified_diff)
+                self.stats_file = self.out_dir/"stats.json"
+                self.stats_file.open("w").write(json.dumps(self.stats.report(), indent=2))
+            if self.verbose: 
+                print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}, time elapsed: {time.time() - self.time_start:.2f}s")
+                print(f"Tool stats: \n{self.tool_stats}")
+            return unified_diff
             
-                self._tool_reply(call, output)
-                self.tool_usage += 1
-
-        unified_diff = git_diff(repo_root)
-        if self.log: 
-            self.diff_file.open("w").write(unified_diff)
-            self.stats_file = self.out_dir/"stats.json"
-            self.stats_file.open("w").write(json.dumps(self.stats.report(), indent=2))
-        if self.verbose: 
-            print(f"\nToken count: {self.token_usage}, tool calls: {self.tool_usage}, time elapsed: {time.time() - self.time_start:.2f}s")
-            print(f"Tool stats: \n{self.tool_stats}")
-        return unified_diff
+        finally:
+            env.stop()
 
     def _chat(self) -> dict:
         # Dynamic response sizing to prevent context window errors

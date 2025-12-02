@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any
 from collections import Counter
-
+from nano.env import Environment
 
 SHELL_TOOL = {
     "type": "function",
@@ -35,7 +35,7 @@ PATCH_TOOL = {
 }
 
 
-def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, verbose: bool = False) -> str:
+def shell(args: dict, env: Environment, stats: "ToolStats", timeout: int = 120, verbose: bool = False) -> str:
     """Run a shell command using bash with timeout and output limits."""
 
     if "cmd" not in args:
@@ -46,11 +46,7 @@ def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, ver
     if verbose: print(f"\033[1mshell\033[0m({cmd})")
     
     try:
-        res = subprocess.run(
-            ["bash", "-rc", cmd], cwd=repo_root,
-            timeout=timeout, text=True, errors="ignore", 
-            stderr=subprocess.STDOUT, stdout=subprocess.PIPE  # merges stderr into stdout
-        )
+        res = env.run_shell(cmd, timeout=timeout)
         
         output = res.stdout.strip() if res.stdout else ""
         
@@ -63,15 +59,12 @@ def shell(args: dict, repo_root: Path, stats: "ToolStats", timeout: int = 4, ver
             if output: return f"command failed with exit code {res.returncode}. Error output:" + "\n" + output
             else: return f"command failed with exit code {res.returncode}"
                 
-    except subprocess.TimeoutExpired:
+    except Exception as e:
         stats.record_shell(cmd, success=False)
-        return f"command timed out after {timeout}s"
-    except:
-        stats.record_shell(cmd, success=False)
-        return f"shell execution failed"
+        return f"shell execution failed: {e}"
 
 
-def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool = False) -> str:
+def apply_patch(args: dict, env: Environment, stats: "ToolStats", verbose: bool = False) -> str:
     """Apply a literal search/replace to one file."""
 
     if "search" not in args or "replace" not in args or "file" not in args:
@@ -83,16 +76,17 @@ def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool =
     if verbose: print(f"\033[1mapply_patch\033[0m(..., ..., {file})")
 
     try:
-        target = (repo_root / file).resolve()
-        if not str(target).startswith(str(repo_root.resolve())):
-            stats.record_patch(success=False)
-            return "file must be inside the repository"
-        
-        if not target.exists():
+        if not env.file_exists(file):
             stats.record_patch(success=False)
             return f"file {file} not found"
         
-        text = target.read_text()
+        # Read file
+        try:
+            text = env.read_file(file)
+        except ValueError as e:
+            stats.record_patch(success=False)
+            return str(e)  # "file must be inside the repository"
+        
         search_count = text.count(search)
 
         if search_count == 0:
@@ -104,13 +98,14 @@ def apply_patch(args: dict, repo_root: Path, stats: "ToolStats", verbose: bool =
             return f"search ambiguous: {search_count} matches - add more context to make search unique"
         
         new_text = text.replace(search, replace, 1)
-        target.write_text(new_text)
+        env.write_file(file, new_text)
+        
         stats.record_patch(success=True)
         return "patch applied successfully"
 
-    except:
+    except Exception as e:
         stats.record_patch(success=False)
-        return "patch operation failed"
+        return f"patch operation failed: {e}"
     
 
 MONITORED_COMMANDS = {

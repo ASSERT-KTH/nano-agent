@@ -10,7 +10,7 @@ setup(
     version=version,
     packages=find_packages(),
     install_requires=["litellm>=1.73.0"],
-    extras_require={"test": ["GitPython>=3.1.0"]},  # For SWE-Bench testing
+    extras_require={"test": ["GitPython>=3.1.0", "pytest>=9.0.1"]},  # For SWE-Bench testing
     entry_points={
         "console_scripts": [
             "nano_agent=nano.cli:main",  # we shouldn't overload "nano"
