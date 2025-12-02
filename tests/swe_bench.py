@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import statistics
 
 from nano import Agent, __version__
+from nano.env import DockerEnvironment, ApptainerEnvironment
 from utils import clone_repo_at_commit, clean_repo_dir, unified_diff_similarity, get_git_commit_hash
 from baseline import load_baseline, save_baseline, generate_baseline_name, build_config_snapshot, compare_baselines
 from leaderboard import update_readme_leaderboard
@@ -24,19 +25,41 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
     instance_id = problem["instance_id"]
     logging.info(f"Running {instance_id} (rep {repetition + 1})")
     
-    agent = Agent(**agent_config)
+    # Copy config to avoid modifying shared state
+    agent_config = agent_config.copy()
+    backend = agent_config.pop("backend", "local")
+    
+    env = None
     repo_path = None
     
     try:
-        # Clone and run
-        repo_path = clone_repo_at_commit(
-            problem["git_repo_handle"], 
-            problem["git_commit"]
-        )
+        if backend == "local":
+            # Clone and run
+            repo_path = clone_repo_at_commit(
+                problem["git_repo_handle"], 
+                problem["git_commit"]
+            )
+            agent_repo_root = repo_path
+        else:
+            # Container based execution
+            image_name = f"ghcr.io/epoch-research/swe-bench.eval.x86_64.{instance_id}:latest"
+            workdir = "/testbed"
+            
+            if backend == "docker":
+                env = DockerEnvironment(image=image_name, workdir=workdir)
+            elif backend == "apptainer":
+                env = ApptainerEnvironment(image=f"docker://{image_name}", workdir=workdir)
+            else:
+                raise ValueError(f"Unknown backend: {backend}")
+                
+            agent_config["env"] = env
+            agent_repo_root = workdir
+
+        agent = Agent(**agent_config)
         
         generated_diff = agent.run(
             task=problem["problem_description"], 
-            repo_root=repo_path
+            repo_root=agent_repo_root
         )
         
         # Calculate similarities
@@ -231,6 +254,7 @@ def main():
     parser.add_argument("--tool-limit", type=int, default=100, help="Tool limit")
     parser.add_argument("--max-workers", type=int, default=8, help="Max parallel workers")
     parser.add_argument("--repetitions", type=int, default=1, help="Number of repetitions per problem")
+    parser.add_argument("--backend", choices=["local", "docker", "apptainer"], default="local", help="Execution backend")
     
     args = parser.parse_args()
     
@@ -257,6 +281,7 @@ def main():
     print(f"Model: {model}")
     print(f"Max workers: {args.max_workers}")
     print(f"Repetitions: {args.repetitions}")
+    print(f"Backend: {args.backend}")
     
     # Agent configuration
     agent_config = {
@@ -266,10 +291,8 @@ def main():
         "tool_limit": args.tool_limit,
         "verbose": False,
         "thinking": args.thinking,
-        "temperature": 0.6,   
-        "top_k": 20,
-        "top_p": 0.95,
-        "min_p": 0.05
+        "temperature": 1.0,
+        "backend": args.backend
     }
     
     # Load baseline early to catch errors before running tests
@@ -329,4 +352,4 @@ def main():
         compare_baselines(metrics, baseline, config_snapshot)
 
 if __name__ == "__main__":
-    main() 
+    main()

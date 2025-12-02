@@ -144,12 +144,14 @@ class LocalEnvironment(Environment):
 class DockerEnvironment(Environment):
     """Execution environment running inside a Docker container."""
     
-    def __init__(self, image: str, workdir: str = "/app"):
+    def __init__(self, image: str, workdir: str = "/testbed"):
         self.image = image
         self.workdir = workdir
         self.container_id = None
 
     def start(self):
+        if self.container_id:
+            return
         # Start a detached container that stays alive
         cmd = ["docker", "run", "-d", "-w", self.workdir, "--rm", self.image, "tail", "-f", "/dev/null"]
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -229,18 +231,26 @@ class DockerEnvironment(Environment):
 class ApptainerEnvironment(Environment):
     """Execution environment running inside an Apptainer container."""
     
-    def __init__(self, image: str, workdir: str = "/app"):
+    def __init__(self, image: str, workdir: str = "/testbed"):
         self.image = image
         self.workdir = workdir
         self.instance_name = f"nano-{str(uuid.uuid4())[:8]}"
+        self.started = False
 
     def start(self):
+        if self.started:
+            return
+        # Check if instance is already running (in case we're re-attaching or something)
+        # But here we rely on internal state for now.
         # Start an instance with writable tmpfs to allow file modifications
         cmd = ["apptainer", "instance", "start", "--writable-tmpfs", "--fakeroot", self.image, self.instance_name]
         subprocess.run(cmd, check=True, capture_output=True)
+        self.started = True
         
     def stop(self):
-        subprocess.run(["apptainer", "instance", "stop", self.instance_name], capture_output=True)
+        if self.started:
+            subprocess.run(["apptainer", "instance", "stop", self.instance_name], capture_output=True)
+            self.started = False
 
     def _exec(self, cmd: list, input: Optional[str] = None, timeout: int = 120) -> ShellResult:
         # apptainer exec instance://name cmd

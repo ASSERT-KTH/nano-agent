@@ -71,7 +71,7 @@ class Agent:
             response_limit: int = 4096,
             thinking: bool = False,
             temperature: float = 0.7,
-            top_p: Optional[float] = 0.95,
+            top_p: Optional[float] = None,
             min_p: Optional[float] = None,
             top_k: Optional[int] = None,
             verbose: bool = False,
