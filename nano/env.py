@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 import uuid
-from typing import Optional
+from typing import Optional, Callable
 
 @dataclass
 class ShellResult:
@@ -63,12 +63,15 @@ class Environment(ABC):
 class LocalEnvironment(Environment):
     """Execution environment running on the local machine."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, setup_fn: Optional[Callable[["Environment"], None]] = None):
         self.root = root.resolve()
+        self.setup_fn = setup_fn
 
     def start(self):
         if not self.root.exists():
             raise FileNotFoundError(f"Root directory {self.root} does not exist")
+        if self.setup_fn:
+            self.setup_fn(self)
 
     def stop(self):
         pass
@@ -144,10 +147,12 @@ class LocalEnvironment(Environment):
 class DockerEnvironment(Environment):
     """Execution environment running inside a Docker container."""
     
-    def __init__(self, image: str, workdir: str = "/testbed"):
+    def __init__(self, image: str, workdir: str = "/testbed", setup_fn: Optional[Callable[["Environment"], None]] = None):
         self.image = image
         self.workdir = workdir
         self.container_id = None
+        self.setup_fn = setup_fn
+        self.path = None  # Can be set by setup_fn to configure PATH for all commands
 
     def start(self):
         if self.container_id:
@@ -156,6 +161,9 @@ class DockerEnvironment(Environment):
         cmd = ["docker", "run", "-d", "-w", self.workdir, "--rm", self.image, "tail", "-f", "/dev/null"]
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         self.container_id = res.stdout.strip()
+        
+        if self.setup_fn:
+            self.setup_fn(self)
         
     def stop(self):
         if self.container_id:
@@ -194,8 +202,11 @@ class DockerEnvironment(Environment):
             )
 
     def run_shell(self, cmd: str, timeout: int = 120) -> ShellResult:
-        # We run inside bash for shell features
-        return self._exec(["bash", "-c", cmd], timeout=timeout)
+        # Use custom PATH if set by setup_fn, otherwise just run the command
+        if self.path:
+            return self._exec(["bash", "-c", f"export PATH={self.path} && cd {self.workdir} && {cmd}"], timeout=timeout)
+        else:
+            return self._exec(["bash", "-c", f"cd {self.workdir} && {cmd}"], timeout=timeout)
 
     def read_file(self, path: str) -> str:
         res = self._exec(["cat", path])
@@ -231,11 +242,13 @@ class DockerEnvironment(Environment):
 class ApptainerEnvironment(Environment):
     """Execution environment running inside an Apptainer container."""
     
-    def __init__(self, image: str, workdir: str = "/testbed"):
+    def __init__(self, image: str, workdir: str = "/testbed", setup_fn: Optional[Callable[["Environment"], None]] = None):
         self.image = image
         self.workdir = workdir
         self.instance_name = f"nano-{str(uuid.uuid4())[:8]}"
         self.started = False
+        self.setup_fn = setup_fn
+        self.path = None  # Can be set by setup_fn to configure PATH for all commands
 
     def start(self):
         if self.started:
@@ -243,9 +256,12 @@ class ApptainerEnvironment(Environment):
         # Check if instance is already running (in case we're re-attaching or something)
         # But here we rely on internal state for now.
         # Start an instance with writable tmpfs to allow file modifications
-        cmd = ["apptainer", "instance", "start", "--writable-tmpfs", "--fakeroot", self.image, self.instance_name]
+        cmd = ["apptainer", "instance", "start", "--writable-tmpfs", "--fakeroot", "--containall", self.image, self.instance_name]
         subprocess.run(cmd, check=True, capture_output=True)
         self.started = True
+        
+        if self.setup_fn:
+            self.setup_fn(self)
         
     def stop(self):
         if self.started:
@@ -254,7 +270,8 @@ class ApptainerEnvironment(Environment):
 
     def _exec(self, cmd: list, input: Optional[str] = None, timeout: int = 120) -> ShellResult:
         # apptainer exec instance://name cmd
-        full_cmd = ["apptainer", "exec", f"instance://{self.instance_name}"] + cmd
+        # Use --pwd / to avoid warning about missing home directory with --containall
+        full_cmd = ["apptainer", "exec", "--pwd", "/", f"instance://{self.instance_name}"] + cmd
         
         try:
             res = subprocess.run(
@@ -282,7 +299,11 @@ class ApptainerEnvironment(Environment):
             )
 
     def run_shell(self, cmd: str, timeout: int = 120) -> ShellResult:
-        return self._exec(["bash", "-c", f"cd {self.workdir} && {cmd}"], timeout=timeout)
+        # Use custom PATH if set by setup_fn, otherwise just run the command
+        if self.path:
+            return self._exec(["bash", "-c", f"export PATH={self.path} && cd {self.workdir} && {cmd}"], timeout=timeout)
+        else:
+            return self._exec(["bash", "-c", f"cd {self.workdir} && {cmd}"], timeout=timeout)
 
     def read_file(self, path: str) -> str:
         # Need to handle absolute/relative paths wrt workdir
@@ -304,7 +325,7 @@ class ApptainerEnvironment(Environment):
         
         # For write, we use input.
         # apptainer exec instance://... bash -c "cd workdir && tee path"
-        full_cmd = ["apptainer", "exec", f"instance://{self.instance_name}", "bash", "-c", f"cd {self.workdir} && tee {path}"]
+        full_cmd = ["apptainer", "exec", "--pwd", "/", f"instance://{self.instance_name}", "bash", "-c", f"cd {self.workdir} && tee {path}"]
         
         try:
             res = subprocess.run(
