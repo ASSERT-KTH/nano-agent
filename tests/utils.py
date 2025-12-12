@@ -64,6 +64,11 @@ def setup_env_swebench(env: Environment):
     # Install ripgrep
     env.run_shell("apt-get update && apt-get install -y ripgrep 2>/dev/null || true")
 
+    # Commit all changes to ensure we have a clean state
+    env.run_shell("git config --global user.email 'you@example.com'")
+    env.run_shell("git config --global user.name 'Your Name'")
+    env.run_shell("git add . && git commit -m 'add changes'")
+
 def clone_repo_at_commit(repo_handle: str, commit_id: str, target_dir: Optional[str] = None) -> str:
     """Clone repository at specific commit."""
     if target_dir is None:
