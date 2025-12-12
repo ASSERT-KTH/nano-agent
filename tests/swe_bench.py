@@ -9,7 +9,7 @@ import statistics
 
 from nano import Agent, __version__
 from nano.env import DockerEnvironment, ApptainerEnvironment
-from utils import clone_repo_at_commit, clean_repo_dir, unified_diff_similarity, get_git_commit_hash
+from utils import clone_repo_at_commit, clean_repo_dir, unified_diff_similarity, get_git_commit_hash, setup_env_swebench
 from baseline import load_baseline, save_baseline, generate_baseline_name, build_config_snapshot, compare_baselines
 from leaderboard import update_readme_leaderboard
 
@@ -42,16 +42,16 @@ def run_single_problem(problem: dict, agent_config: dict, repetition: int = 0) -
             agent_repo_root = repo_path
         else:
             # Container based execution
-            image_name = f"ghcr.io/epoch-research/swe-bench.eval.x86_64.{instance_id}:latest"
+            image_name = f"slimshetty/swebench-verified:sweb.eval.x86_64.{instance_id}"
             workdir = "/testbed"
             
             if backend == "docker":
-                env = DockerEnvironment(image=image_name, workdir=workdir)
+                env = DockerEnvironment(image=image_name, workdir=workdir, setup_fn=setup_env_swebench)
             elif backend == "apptainer":
-                env = ApptainerEnvironment(image=f"docker://{image_name}", workdir=workdir)
+                env = ApptainerEnvironment(image=f"docker://{image_name}", workdir=workdir, setup_fn=setup_env_swebench)
             else:
                 raise ValueError(f"Unknown backend: {backend}")
-                
+
             agent_config["env"] = env
             agent_repo_root = workdir
 

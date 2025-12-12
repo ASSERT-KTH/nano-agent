@@ -2,6 +2,7 @@ import pytest
 import shutil
 from nano.env import ApptainerEnvironment
 from nano.agent import Agent
+from tests.utils import setup_env_swebench
 
 def apptainer_available():
     return shutil.which("apptainer") is not None
@@ -107,67 +108,10 @@ def test_apptainer_swebench_setup():
     image_name = "docker://slimshetty/swebench-verified:sweb.eval.x86_64.astropy__astropy-12907"
     workdir = "/testbed"
     
-    setup_completed = []
-    
-    def setup_env(env):
-        """
-        Mimics the R2E-Gym setup function with both swebench and non-swebench paths.
-        Detects which type of image we're using and applies the appropriate setup.
-        """
-        repo_path = workdir
-        alt_path = "/root"
-        
-        # Set the PATH for all subsequent commands
-        DOCKER_PATH = "/root/.venv/bin:/root/.local/bin:/root/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-        env.path = DOCKER_PATH
-        
-        # === setup_env_swebench path ===
-        # Make run_tests.sh executable (if present)
-        env.run_shell("chmod +x /run_tests.sh 2>/dev/null || true")
-        
-        # Create symlink of conda env to /root/.venv
-        env.run_shell("ln -sf /opt/miniconda3/envs/testbed /root/.venv")
-        
-        # Install required packages
-        env.run_shell("python -m pip install chardet -q")
-        
-        # === setup_env (non-swebench R2E-Gym) path ===
-        # Create local bin directory if needed
-        env.run_shell(f"mkdir -p {alt_path}/.local/bin")
-        
-        # Symlink python executables
-        env.run_shell(f"ln -sf {repo_path}/.venv/bin/python {alt_path}/.local/bin/python")
-        env.run_shell(f"ln -sf {repo_path}/.venv/bin/python {alt_path}/.local/bin/python3")
-        
-        # Symlink all executables from venv bin
-        env.run_shell(f"find {repo_path}/.venv/bin -type f -executable -exec ln -sf {{}} {alt_path}/.local/bin/ \\;")
-        
-        # Clean up pycache files
-        env.run_shell("find . -name '*.pyc' -delete 2>/dev/null || true")
-        env.run_shell("find . -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true")
-        
-        # Clean up pycache from r2e_tests (if present)
-        env.run_shell("find /r2e_tests -name '*.pyc' -delete 2>/dev/null || true")
-        env.run_shell("find /r2e_tests -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true")
-        
-        # Move r2e_tests to /root (if present)
-        env.run_shell(f"mv /r2e_tests {alt_path}/r2e_tests 2>/dev/null || true")
-        
-        # Create symlink for r2e_tests in repo
-        env.run_shell(f"ln -sf {alt_path}/r2e_tests {repo_path}/r2e_tests 2>/dev/null || true")
-        
-        # Install ripgrep
-        env.run_shell("apt-get update && apt-get install -y ripgrep 2>/dev/null || true")
-        
-        setup_completed.append(True)
-    
-    env = ApptainerEnvironment(image=image_name, workdir=workdir, setup_fn=setup_env)
+    env = ApptainerEnvironment(image=image_name, workdir=workdir, setup_fn=setup_env_swebench)
     
     try:
         env.start()
-        
-        # Verify setup was called
-        assert len(setup_completed) == 1
         
         # Verify PATH is correctly set
         res = env.run_shell("echo $PATH")
