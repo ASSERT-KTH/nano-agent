@@ -2,6 +2,7 @@ import pytest
 import shutil
 from nano.env import ApptainerEnvironment
 from nano.agent import Agent
+from tests.utils import setup_env_swebench
 
 def apptainer_available():
     return shutil.which("apptainer") is not None
@@ -67,6 +68,83 @@ def test_agent_in_apptainer():
         stats = ToolStats()
         output = shell({"cmd": "echo 'agent test'"}, env, stats)
         assert "agent test" in output
+        
+    finally:
+        env.stop()
+
+@pytest.mark.skipif(not apptainer_available(), reason="Apptainer not available")
+def test_apptainer_setup_fn():
+    # Test that setup_fn is called during start()
+    setup_called = []
+    
+    def my_setup(env):
+        # Create workdir first (needed for apptainer)
+        env._exec(["mkdir", "-p", "/app"])
+        # Create a marker file to prove setup ran
+        env.run_shell("echo 'setup_marker' > /tmp/setup_marker.txt")
+        setup_called.append(True)
+    
+    env = ApptainerEnvironment(image="docker://debian:stable-slim", workdir="/app", setup_fn=my_setup)
+    
+    try:
+        env.start()
+        
+        # Verify setup_fn was called
+        assert len(setup_called) == 1
+        
+        # Verify the marker file exists (setup actually ran inside container)
+        res = env.run_shell("cat /tmp/setup_marker.txt")
+        assert res.returncode == 0
+        assert "setup_marker" in res.stdout
+        
+    finally:
+        env.stop()
+
+@pytest.mark.skipif(not apptainer_available(), reason="Apptainer not available")
+def test_apptainer_swebench_setup():
+    """Test setup_fn with a real SWE-bench docker image and typical setup commands."""
+    
+    # Use a sample R2E-Gym SWE-bench image
+    image_name = "docker://slimshetty/swebench-verified:sweb.eval.x86_64.astropy__astropy-12907"
+    workdir = "/testbed"
+    
+    env = ApptainerEnvironment(image=image_name, workdir=workdir, setup_fn=setup_env_swebench)
+    
+    try:
+        env.start()
+        
+        # Verify PATH is correctly set
+        res = env.run_shell("echo $PATH")
+        assert res.returncode == 0
+        assert "/root/.venv/bin" in res.stdout
+        assert "/root/.local/bin" in res.stdout
+        
+        # Verify the symlink was created
+        res = env.run_shell("ls -la /root/.venv")
+        assert res.returncode == 0
+        assert "miniconda3" in res.stdout or "testbed" in res.stdout or ".venv" in res.stdout
+        
+        # Verify chardet was installed
+        res = env.run_shell("python -c 'import chardet; print(chardet.__version__)'")
+        assert res.returncode == 0
+        
+        # Verify we're in a git repo
+        assert env.is_git_repo()
+        
+        # Verify python works
+        res = env.run_shell("python --version")
+        assert res.returncode == 0
+        assert "Python" in res.stdout
+        
+        # Verify ripgrep is installed
+        res = env.run_shell("rg --version")
+        assert res.returncode == 0
+        assert "ripgrep" in res.stdout
+        
+        # Verify python is from the correct venv
+        res = env.run_shell("which python")
+        assert res.returncode == 0
+        assert "/root/.venv/bin/python" in res.stdout or "/opt/miniconda3/envs/testbed" in res.stdout
         
     finally:
         env.stop()
