@@ -248,7 +248,11 @@ class Agent:
                     tool_choice="auto",
                 )
 
-                msg = reply["choices"][0]["message"].model_dump()
+                # Convert the entire reply to dict first, which recursively converts
+                # all nested Pydantic models (including message) without triggering
+                # serialization warnings that occur when calling model_dump() on nested models
+                reply_dict = reply.model_dump() if hasattr(reply, 'model_dump') else reply
+                msg = reply_dict["choices"][0]["message"]
                 msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
 
                 self._append(msg)
