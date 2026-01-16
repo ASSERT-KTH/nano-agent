@@ -69,7 +69,7 @@ class Agent:
             tool_limit: int = 30,
             time_limit: Optional[int] = None,
             response_limit: int = 4096,
-            thinking: bool = False,
+            thinking: Optional[bool] = None,
             temperature: float = 0.7,
             top_p: Optional[float] = None,
             min_p: Optional[float] = None,
@@ -87,7 +87,7 @@ class Agent:
             tool_limit (int): Maximum number of tool calls the agent can make before stopping
             time_limit (int, optional): Maximum execution time in seconds before stopping
             response_limit (int): Maximum tokens per completion response
-            thinking (bool): If True, emits intermediate reasoning in <think> tags (model must support it)
+            thinking (bool, optional): If True, sets up thinking options. If None, the thinking option is not set.
             temperature (float): Sampling temperature, higher means more random
             top_p (float, optional): Nucleus-sampling cutoff; only tokens comprising the top `p` probability mass are kept.
             min_p (float, optional): Relative floor for nucleus sampling; tokens below `min_p * max_token_prob` are filtered out.
@@ -113,13 +113,17 @@ class Agent:
             top_p=top_p,
         )
         if not model.startswith(("openai/", "anthropic/")):  # most endpoints except these support these params
-            self.llm_kwargs.update(dict(
+            update_dict = dict(
                 top_k=top_k,
                 min_p=min_p,
-                chat_template_kwargs={"enable_thinking": thinking},
-                extra_body={"enable_thinking": thinking}
-            ))
-        if model.startswith("gemini/"):
+            )
+            if thinking is not None:
+                update_dict.update(dict(
+                    chat_template_kwargs={"enable_thinking": thinking},
+                    extra_body={"enable_thinking": thinking}
+                ))
+            self.llm_kwargs.update(update_dict)
+        if model.startswith("gemini/") and thinking is not None:
             self.llm_kwargs.update(dict(
                 reasoning_effort="disable" if not thinking else "high"
             ))
