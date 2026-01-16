@@ -234,20 +234,38 @@ class Agent:
         available = max(0, self.remaining_tokens - safety_buffer)
         
         litellm = _get_litellm()  # Lazy load and cache
-        reply = litellm.completion(
-            **self.llm_kwargs,
-            max_tokens=max(256, min(self.response_limit, available // 2)),
-            messages=self.messages,
-            tools=self.tools,
-            tool_choice="auto",
-        )
+        
+        max_retries = 3
+        base_delay = 1  # Start with 1 second
+        
+        for attempt in range(max_retries):
+            try:
+                reply = litellm.completion(
+                    **self.llm_kwargs,
+                    max_tokens=max(256, min(self.response_limit, available // 2)),
+                    messages=self.messages,
+                    tools=self.tools,
+                    tool_choice="auto",
+                )
 
-        msg = reply["choices"][0]["message"].model_dump()
-        msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
+                msg = reply["choices"][0]["message"].model_dump()
+                msg.pop("annotations", None)  # openai endpoint emits an empty annotations field which we don't need
 
-        self._append(msg)
+                self._append(msg)
 
-        return msg
+                return msg
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    # Exponential backoff: 1s, 2s, 4s
+                    delay = base_delay * (2 ** attempt)
+                    if self.verbose:
+                        print(f"LLM call failed (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...")
+                    time.sleep(delay)
+                else:
+                    # Last attempt failed, re-raise the exception
+                    if self.verbose:
+                        print(f"LLM call failed after {max_retries} attempts: {e}")
+                    raise
 
     def _append(self, msg: dict):
         self.messages.append(msg)
